@@ -1,0 +1,61 @@
+\documentclass{article}
+
+\usepackage[a4paper,width=160mm,top=25mm,bottom=20mm]{geometry}
+\usepackage{fancyhdr}
+\usepackage[utf8x]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[english]{babel}
+\usepackage[usenames,dvipsnames,svgnames,table]{xcolor}
+\usepackage{hyperref}
+\usepackage{graphicx}
+\usepackage{amssymb}
+\usepackage{amsmath}
+\usepackage{draftwatermark}
+% \usepackage[firstpage]{draftwatermark}
+
+\SetWatermarkText{\textbf{Draft}}
+\SetWatermarkScale{5}
+\SetWatermarkAngle{30}
+\SetWatermarkFontSize{2cm}
+% \SetWatermarkColor[rgb]{1,0,0}
+\SetWatermarkColor[gray]{0.9}
+
+
+\fancypagestyle{firstpage}{
+    \fancyhead{}
+    \renewcommand{\headrulewidth}{1pt}
+}
+
+\pagestyle{fancy}
+\fancyhf{}
+\renewcommand{\sectionmark}[1]{\markright{#1}}
+% \fancyhead[L]{\rightmark} % L (left), R (right), C (center)
+\fancyhead[R]{\rightmark}
+\fancyfoot[R]{\thepage}
+
+
+\title{Note on Graph Convolutional Neural Networks}
+\author{Fei Jie \\ \href{}{hfut\_jf@aliyun.com}}
+
+
+\begin{document}
+
+\maketitle
+\thispagestyle{firstpage}
+
+\section{Introduction}
+
+
+\section{Preliminary}
+
+
+\section{Model		}
+
+
+\section{xx}
+
+
+\bibliographystyle{acm}
+\bibliography{references}
+
+\end{document}

@@ -1,0 +1,36 @@
+\begin{thebibliography}{1}
+
+\bibitem{chen2016generalized}
+{\sc Chen, F., and Zhou, B.}
+\newblock A generalized matching pursuit approach for graph-structured
+  sparsity.
+\newblock In {\em IJCAI\/} (2016), pp.~1389--1395.
+
+\bibitem{chen2017generic}
+{\sc Chen, F., Zhou, B., Alim, A., and Zhao, L.}
+\newblock A generic framework for interesting subspace cluster detection in
+  multi-attributed networks.
+\newblock In {\em 2017 IEEE International Conference on Data Mining (ICDM)\/}
+  (2017), IEEE, pp.~41--50.
+
+\bibitem{hegde2015nearly}
+{\sc Hegde, C., Indyk, P., and Schmidt, L.}
+\newblock A nearly-linear time framework for graph-structured sparsity.
+\newblock In {\em International Conference on Machine Learning\/} (2015),
+  pp.~928--937.
+
+\bibitem{yuan2014gradient}
+{\sc Yuan, X., Li, P., and Zhang, T.}
+\newblock Gradient hard thresholding pursuit for sparsity-constrained
+  optimization.
+\newblock In {\em International Conference on Machine Learning\/} (2014),
+  pp.~127--135.
+
+\bibitem{zhou2016graph}
+{\sc Zhou, B., and Chen, F.}
+\newblock Graph-structured sparse optimization for connected subgraph
+  detection.
+\newblock In {\em 2016 IEEE 16th International Conference on Data Mining
+  (ICDM)\/} (2016), IEEE, pp.~709--718.
+
+\end{thebibliography}

@@ -1,0 +1,366 @@
+\newif\ifColor
+% Add \Colortrue to settings.tex to use color
+% Otherwise, will show a primarily grayscale version of the document for printing
+
+\documentclass[11pt,oneside,a4paper]{book}
+% \usepackage{natbib}
+\usepackage[numbers]{natbib}
+\usepackage{breakcites} % Do Not let citations break out of the text frame
+\usepackage{microtype} % Get rid of some frame busts automatically
+% Note: if microtype causes error on ubuntu, run
+% sudo apt-get install cm-super
+\title{Notes on Convex Optimization}
+\author{Fei Jie}
+\date{}
+\setcounter{tocdepth}{1}
+
+\pdfobjcompresslevel=0
+
+\usepackage{zref-abspage}
+
+\setcounter{secnumdepth}{3} % Number subsubsections, because we reference them,
+% so the reader needs numbers to find the correct place.
+
+
+\usepackage[vcentering,dvips]{geometry}
+\geometry{papersize={7in,9in},bottom=3pc,top=5pc,left=5pc,right=5pc,bmargin=4.5pc,footskip=18pt,headsep=25pt}
+
+
+%%% Packages %%%
+\usepackage{epsfig}
+\usepackage{subfigure}
+\usepackage[utf8]{inputenc}
+
+% Needed for some foreign characters
+\usepackage[T1]{fontenc}
+
+\usepackage{amsmath}
+\usepackage{subfigure}
+\usepackage{amsfonts}
+\usepackage{amsthm}
+\usepackage{mathtools}
+\usepackage{multirow}
+\usepackage{colortbl}
+\usepackage{booktabs}
+% This allows us to cite chapters by name, which was useful for making the
+% acknowledgements page
+\usepackage{nameref}
+% Make sure there is a space between the subsection number and subsection title
+% in the table of contents.
+% If we do not do this we end up with 2 digit subsection numbers colliding with
+% the title.
+% See https://tex.stackexchange.com/questions/7853/toc-text-numbers-alignment/7856#7856?newreg=d2632892dd0345f388619f12fa794b11
+\usepackage[tocindentauto]{tocstyle}
+\usetocstyle{standard}
+
+\usepackage{bm}
+
+\usepackage{float}
+\newcommand{\boldindex}[1]{\textbf{\hyperpage{#1}}}
+\usepackage{makeidx}\makeindex
+% Make bibliography and index appear in table of contents
+\usepackage[nottoc]{tocbibind}
+% Using the caption package allows us to support captions that contain "itemize" environments.
+% The font=small option makes the text of captions smaller than the main text.
+\usepackage[font=small]{caption}
+
+% Used to change header sizes
+\usepackage{fancyhdr}
+
+\usepackage[chapter]{algorithm}
+\usepackage{algorithmic}
+% Include chapter number in algorithm number
+\renewcommand{\thealgorithm}{\arabic{chapter}.\arabic{algorithm}}
+
+
+\theoremstyle{definition}
+\newtheorem{example}{Example}[section]
+
+% Define the P table cell environment
+% It is the same as p, but centers the text horizontally
+\usepackage{array}
+\newcolumntype{P}[1]{>{\centering\arraybackslash}p{#1}}
+
+% Rebuild the book document class's headers from scratch, but with different font size
+% (this is for MIT Press style)
+% Source: http://texblog.org/2012/10/09/changing-the-font-size-in-fancyhdr/
+\newcommand{\changefont}{% 1st arg to fontsize is font size. 2nd arg is the baseline skip. both in points.
+    \fontsize{9}{11}\selectfont
+}
+\fancyhf{}
+%\fancyhead[LE,RO]{\changefont \slshape \rightmark} %section
+\fancyhead[RE,LO]{\changefont \slshape \leftmark} %chapter
+\fancyfoot[C]{\changefont \thepage} %footer
+\pagestyle{fancy}
+\input{math_commands.tex}
+
+\usepackage[pdffitwindow=false,
+pdfview=FitH,
+pdfstartview=FitH,
+pagebackref=true,
+breaklinks=true,
+\ifColor
+colorlinks,
+\fi
+bookmarks=false,
+plainpages=false]{hyperref}
+
+% Make \[ \] math have equation numbers
+\DeclareRobustCommand{\[}{\begin{equation}}
+\DeclareRobustCommand{\]}{\end{equation}}
+
+% Allow align environments to cross page boundaries.
+% If we do not do this, we get weird gaps of several inches of white space
+% before or after some long align environments.
+\allowdisplaybreaks
+
+\begin{document}
+
+\setlength{\parskip}{0.25 \baselineskip}
+\newlength{\figwidth}
+\setlength{\figwidth}{26pc}
+% Spacing between notation sections
+\newlength{\notationgap}
+\setlength{\notationgap}{1pc}
+
+\typeout{START_CHAPTER "TOC" \theabspage}
+\frontmatter
+
+
+\maketitle
+\tableofcontents
+\typeout{END_CHAPTER "TOC" \theabspage}
+
+\chapter{Preface}
+
+This document is notes on the textbook Convex Optimization \cite{boyd2004convex}.
+
+\mainmatter
+
+\chapter{Introduction}
+
+\section{Mathematical optimization}
+
+A mathematical optimization problem has the form
+\begin{equation}\label{prob:opt}
+	\begin{split}
+		\text{minimize}\quad   & f_0(x) \\
+		\text{subject to}\quad & f_i(x)\leq b_i,\quad i=1,\dots ,m \\
+	\end{split}
+\end{equation}
+Here the vector $x=(x_1,\dots,x_n)$ is the optimization variable of the problem, the function $ f_0:\R^n\to\R $ is the objective function, the functions $ f_i:\R^n\to\R, i=1,\dots,m $ are the limits, or bounds, for the constraints. A vector $ x^* $ is called optimal, or a solution of the problem (\ref{prob:opt}), if it has the smallest objective value among all vectors that satisfy the constraints: for any $ z $ with $ f_1(z)\leq b_1,\dots,f_m(z)\leq b_m $, we have $ f_0(z)\geq f_0(x^*) $.
+
+
+\section{Least squares and linear programming}
+
+\subsection{Least-squares problems}
+
+A least-squares problem is an optimization problem with no constraints and an objective which is a sum of squares of terms of the form $ a_i^T x-b_i $:
+\begin{equation}
+\text{minimize}\quad f_0(x)=\|Ax-b\|_2^2=\sum_{i=2}^k (a_i^Tx-b_i)^2.
+\end{equation}
+Here $ A\in\R^{k\times n} $ (with $ k\geq n $), $ a_i^T $ are the rows of $ A $, and the vectors $ x\in\R^n $ is the optimization variable.
+
+\subsection{Linear programming}
+
+In linear programming problem, the objective function and all constraint functions are linear:
+\begin{equation}
+\begin{split}
+\text{minimize}\quad&c^Tx \\
+\text{subject to}\quad& c_i^Tx\leq b_i,\quad i=1,\dots, m.
+\end{split}
+\end{equation}
+Here the vectors $ c,a_1,\dots,a_m\in\R^n $ and scalars $ b_1,\dots,b_m\in\R $ are problem parameters that specify the obejctive and constraint functions.
+
+\section{Convex optimization}
+
+A convex optimization problem is one of the form
+\begin{equation}
+\begin{split}
+\text{minimize}\quad &f_0(x) \\
+\text{subject to}\quad& f_i(x)\leq b_i,\quad i=1,\dots,m,
+\end{split}
+\end{equation}
+where the functions $ f_0,\dots,f_m:\R^n\to\R $ are convex, i.e., satisfy
+\begin{equation}
+f_i(\alpha x+\beta y)\leq \alpha f(x)+\beta f(y)
+\end{equation}
+for all $ x,y\in\R^n $ and all $ \alpha,\beta\in\R $ with $ \alpha+\beta=1,\alpha\geq 0, \beta\geq 0 $.n
+
+\section{Nonlinear optimization}
+
+\section{Outline}
+
+\section{Notation}
+
+\part{Theory}
+
+\chapter{Convex sets}  
+
+\section{Affine and convex sets}
+
+\subsection{Lines and line segments}
+
+Suppose $ x_1\neq x_2 $ are two different points in $ \R^n $. Points of the form
+\begin{equation*}
+y=\theta x_1+(1-\theta) x_2,
+\end{equation*}
+where $ \theta\in\R $, form the line passing through $ x_1 $ and $ x_2 $.
+
+\subsection{Affine sets}
+
+A set $ C $ is affine if the line through any two distinct points in $ C $ lies in $ C $, i.e., for any $ x_1,x_2\in C $ and $ \theta\in\R $, we have $ \theta x_1+(1-\theta)x_2\in C $.
+
+\subsection{Affine dimension and relative interior}
+
+\subsection{Convex sets}
+
+A set $ C $ is convex if the line segment between any two points in $ C $ lies in $ C $, i.e., if for any $ x_1,x_2\in C $ and any $ \theta $ with $ 0\leq\theta\leq1 $, we have
+\begin{equation*}
+\theta x_1+(1-\theta)x_2\in C.
+\end{equation*}
+
+\subsection{Cones}
+
+A set $ C $ is called a cone, or nonnegative homogeneous, if for every $ x\in C $ and $ \theta\geq 0 $, we have $ \theta x\in C $. A set $ C $ is a convex cone if it is convex and a cone, which means that for any $ x_1,x_2\in C $ and $ \theta_1,\theta_2\geq 0 $, we have
+\begin{equation*}
+\theta_1 x_1+\theta_2 x_2\in C.
+\end{equation*}
+
+
+\section{Some important examples}
+
+\subsection{Hyperplanes and halfspaces}
+
+\subsection{Euclidean balls and ellipsoids}
+
+\subsection{Norm balls and norm cones}
+
+\subsection{Polyhedra}
+
+\subsection{The positive semidefinite cones}
+
+\section{Operations that preserve convexity}
+
+\subsection{Intersection}
+
+\subsection{Affine functions}
+
+\subsection{Linear-fractional and perspective functions}
+
+\section{Generalized inequalities}
+
+\subsection{Proper cones and generalized inequalities}
+
+A cone $ K\subseteq \R^n $ is called a proper cone if it satisfies the following:
+\begin{itemize}
+\item $ K $ is convex.
+\item $ K $ is closed.
+\item $ K $ is solid, which means it has nonempty interior.
+\item $ K $ is pointed, which means that it contains no line (or equivalently, $ x\in K, -x\in K\Rightarrow x=0 $).
+\end{itemize}
+A proper cone $ K $ can be used to define a generalized inequality, which is a partial order on $ \R^n $ that has many of the properties of the standard ordering on $ \R $.
+
+\subsection{Minimum and minimal elements}
+
+The most obvious difference between ordinary inequalities and generalized inequalities is that $ \leq $ for $ \R $ is a linear ordering: any two points are comparable, meaning either $ x\leq y $ or $ y\leq x $. This property does not hold for other generalized inequalities.
+
+$ x\in S $ is the minimum element of $ S $ (with respect to the generalized inequality $ \preceq_K $) if for every $ y\in S $ we have $ x\preceq_K y $. If a set has minimum (maximum) element, then it is unique. $ x\in S $ is a minimal element of $ S $ (with respect to the generalized inequality $ \preceq_K $) if $ y\in S $, $ y\preceq_K x $ only if $ y=x $.
+
+\section{Separating and supporting hyperplanes}
+
+\section{Dual cones and generalized inequalities}
+
+\chapter{Convex functions}
+
+\section{Basic properties and examples}
+
+\section{Operations that preserve convexity}
+
+\section{The conjugate function}
+
+\section{Quasiconvex functions}
+
+\section{Log-concave and log-convex functions}
+
+\section{Convexity with respect to generalized inequalities}
+
+\chapter{Convex optimization problems}
+
+\section{Optimization problems}
+
+\section{Convex optimization}
+
+\section{Linear optimization problems}
+
+\section{Quadratic optimization problems}
+
+\section{Geometric programming}
+
+\section{Generalized inequality constraints}
+
+\section{Vector optimization}
+
+\chapter{Duality}
+
+\section{The Lagrange dual function}
+
+\section{The Lagrange dual problem}
+
+\section{Geometric interpretation}
+
+\section{Saddle-point interpretation}
+
+\section{Optimality conditions}
+
+\section{Perturbation and sensitivity analysis}
+
+\section{Examples}
+
+\section{Theorems of alternatives}
+
+\section{Generalized inequalities}
+
+\part{Applications}
+
+\chapter{Approximation and fitting}
+
+\chapter{Statistical estimation}
+
+\chapter{Geometric problems}
+
+\part{Algorithms}
+
+\chapter{Unconstrained minimization}
+
+\chapter{Equality constrained minimization}
+
+\chapter{Interior-point methods}
+
+\appendix
+
+\part*{Appendices}
+\addcontentsline{toc}{part}{Appendices}
+
+\chapter{Mathematical background}
+
+\chapter{Problems involving two quadratic functions}
+
+\chapter{Numerical linear algebra background}
+
+\small{
+\typeout{START_CHAPTER "bib" \theabspage}
+\bibliography{../references}
+% \bibliographystyle{natbib}
+\bibliographystyle{acm}
+\clearpage
+\typeout{END_CHAPTER "bib" \theabspage}
+}
+\typeout{START_CHAPTER "index-" \theabspage}
+\printindex
+%\clearpage
+\typeout{END_CHAPTER "index-" \theabspage}
+%\newpage
+
+
+\end{document}

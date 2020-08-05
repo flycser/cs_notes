@@ -1,0 +1,13 @@
+\begin{thebibliography}{1}
+
+\bibitem{boyd2004convex}
+{\sc Boyd, S., and Vandenberghe, L.}
+\newblock {\em Convex optimization}.
+\newblock Cambridge university press, 2004.
+
+\bibitem{kipf2016semi}
+{\sc Kipf, T.~N., and Welling, M.}
+\newblock Semi-supervised classification with graph convolutional networks.
+\newblock {\em arXiv preprint arXiv:1609.02907\/} (2016).
+
+\end{thebibliography}

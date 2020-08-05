@@ -1,0 +1,125 @@
+\relax 
+\providecommand\hyper@newdestlabel[2]{}
+\providecommand\HyperFirstAtBeginDocument{\AtBeginDocument}
+\HyperFirstAtBeginDocument{\ifx\hyper@anchor\@undefined
+\global\let\oldcontentsline\contentsline
+\gdef\contentsline#1#2#3#4{\oldcontentsline{#1}{#2}{#3}}
+\global\let\oldnewlabel\newlabel
+\gdef\newlabel#1#2{\newlabelxx{#1}#2}
+\gdef\newlabelxx#1#2#3#4#5#6{\oldnewlabel{#1}{{#2}{#3}}}
+\AtEndDocument{\ifx\hyper@anchor\@undefined
+\let\contentsline\oldcontentsline
+\let\newlabel\oldnewlabel
+\fi}
+\fi}
+\global\let\hyper@last\relax 
+\gdef\HyperFirstAtBeginDocument#1{#1}
+\providecommand\HyField@AuxAddToFields[1]{}
+\providecommand\HyField@AuxAddToCoFields[2]{}
+\citation{hinton2012improving}
+\citation{ioffe2015batch}
+\citation{ba2016layer}
+\citation{krizhevsky2012imagenet}
+\citation{garcia2017few}
+\citation{wang2019survey}
+\citation{koch2015siamese}
+\citation{fei2006one}
+\citation{garcia2017few}
+\select@language{english}
+\@writefile{toc}{\select@language{english}}
+\@writefile{lof}{\select@language{english}}
+\@writefile{lot}{\select@language{english}}
+\@writefile{toc}{\contentsline {section}{\numberline {1}Introduction}{1}{section.1}}
+\@writefile{toc}{\contentsline {paragraph}{Data Augmentation}{1}{section*.1}}
+\@writefile{toc}{\contentsline {paragraph}{Few-shot Learning}{1}{section*.2}}
+\citation{vinyals2016matching}
+\citation{vinyals2016matching}
+\citation{goodfellow2014generative}
+\citation{sun2018meta}
+\citation{thrun2012learning}
+\citation{munkhdalai2017meta}
+\citation{ravi2016optimization}
+\citation{finn2017model}
+\citation{krizhevsky2012imagenet}
+\citation{goodfellow2014generative}
+\citation{zhu2017unpaired}
+\citation{gurumurthy2017deligan}
+\citation{perez2017effectiveness}
+\citation{antoniou2017data}
+\@writefile{lof}{\contentsline {figure}{\numberline {1}{\ignorespaces Few-shot learning datasets setting. In few-shot leanring process, each training instance is a task (sometime we call it \textit  {episode} \cite  {vinyals2016matching}). Each task is separated $D_{\text  {train}}$, $D_{\text  {validation}}$ (ignored in this figure), $D_{\text  {test}}$. In the training procedure of few-shot learning, a model takes one of $D_{\text  {train}}$ datasets as input and produces a clssifier that achieves high average performance on its corresponding test set $D_{\text  {test}}$. Using $D_{\text  {validation}}$ we can perform hyper-parameter selection of the model and evaluate its generalization performance on $D_{\text  {test}}$.}}{2}{figure.1}}
+\newlabel{fig:fewshot}{{1}{2}{Few-shot learning datasets setting. In few-shot leanring process, each training instance is a task (sometime we call it \textit {episode} \cite {vinyals2016matching}). Each task is separated $D_{\text {train}}$, $D_{\text {validation}}$ (ignored in this figure), $D_{\text {test}}$. In the training procedure of few-shot learning, a model takes one of $D_{\text {train}}$ datasets as input and produces a clssifier that achieves high average performance on its corresponding test set $D_{\text {test}}$. Using $D_{\text {validation}}$ we can perform hyper-parameter selection of the model and evaluate its generalization performance on $D_{\text {test}}$}{figure.1}{}}
+\@writefile{toc}{\contentsline {paragraph}{Few-shot Learning}{2}{section*.3}}
+\@writefile{toc}{\contentsline {paragraph}{Semi-supervised Learning}{2}{section*.4}}
+\@writefile{toc}{\contentsline {paragraph}{Active Learning}{2}{section*.5}}
+\@writefile{toc}{\contentsline {section}{\numberline {2}Data Augmentation}{2}{section.2}}
+\@writefile{toc}{\contentsline {paragraph}{Traditional Transformations}{2}{section*.6}}
+\citation{antoniou2017data}
+\citation{perez2017effectiveness}
+\citation{gygli2017deep}
+\@writefile{toc}{\contentsline {paragraph}{Generative Adversarial Networks}{3}{section*.7}}
+\newlabel{fig:dagan}{{2}{3}{Generative Adversarial Networks}{section*.7}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {2}{\ignorespaces DAGAN Architecture. Left: the generator network is composed of an encoder taking an input image (from class c), projecting it down to a lower dimensional manifold (bottleneck). A random vector ($z_i$) is transformed and concatenated with the bottleneck vector; these are both passed to the decoder network which generates an augmentation image. Right: the adversarial discriminator network is trained to discriminate between the samples from the real distribution (other real images from the same class) and the fake distribution (images generative from the generator network). Adversarial training leads the network to generate new images from an old one that appear to be within the same class (whatever that class is), but look different enough to be a different sample.}}{3}{figure.2}}
+\citation{snell2017prototypical}
+\citation{sung2018learning}
+\citation{vinyals2016matching}
+\citation{koch2015siamese}
+\citation{mehrotra2017generative}
+\citation{munkhdalai2017meta}
+\citation{santoro2016meta}
+\citation{ravi2016optimization}
+\citation{finn2017model}
+\citation{koch2015siamese}
+\citation{vinyals2016matching}
+\citation{hochreiter1997long}
+\citation{snell2017prototypical}
+\citation{vinyals2016matching}
+\citation{mehrotra2017generative}
+\@writefile{toc}{\contentsline {paragraph}{Learning the Augmentation}{4}{section*.8}}
+\newlabel{fig:cmb}{{2}{4}{Learning the Augmentation}{section*.8}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {3}{\ignorespaces Architecture of Learning the Augmentation model.}}{4}{figure.3}}
+\@writefile{toc}{\contentsline {section}{\numberline {3}Few-Shot Learning}{4}{section.3}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.1}Metric learning}{4}{subsection.3.1}}
+\citation{snell2017prototypical}
+\citation{banerjee2005clustering}
+\@writefile{lof}{\contentsline {figure}{\numberline {4}{\ignorespaces Few-shot learning procedure for Prototypical Networks.}}{5}{figure.4}}
+\newlabel{fig:proto}{{4}{5}{Few-shot learning procedure for Prototypical Networks}{figure.4}{}}
+\newlabel{eq:prototype}{{1}{5}{Prototypical Networks}{equation.3.1}{}}
+\newlabel{eq:prediction}{{2}{5}{Prototypical Networks}{equation.3.2}{}}
+\@writefile{toc}{\contentsline {paragraph}{Prototypical Networks as Mixture Density Estimation}{5}{section*.10}}
+\citation{ravi2016optimization}
+\citation{munkhdalai2017meta}
+\citation{finn2017model}
+\citation{mishra2017meta}
+\citation{ravi2016optimization}
+\@writefile{loa}{\contentsline {algorithm}{\numberline {1}{\ignorespaces Training episode loss computation for Prototypical Networks.}}{6}{algorithm.1}}
+\newlabel{eq:inference}{{5}{6}{Prototypical Networks as Mixture Density Estimation}{equation.3.5}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.2}Meta Learning}{6}{subsection.3.2}}
+\bibstyle{acm}
+\bibdata{../references}
+\bibcite{antoniou2017data}{1}
+\bibcite{ba2016layer}{2}
+\bibcite{banerjee2005clustering}{3}
+\bibcite{fei2006one}{4}
+\bibcite{finn2017model}{5}
+\bibcite{garcia2017few}{6}
+\bibcite{goodfellow2014generative}{7}
+\bibcite{gurumurthy2017deligan}{8}
+\bibcite{gygli2017deep}{9}
+\bibcite{hinton2012improving}{10}
+\bibcite{hochreiter1997long}{11}
+\bibcite{ioffe2015batch}{12}
+\bibcite{koch2015siamese}{13}
+\bibcite{krizhevsky2012imagenet}{14}
+\bibcite{mehrotra2017generative}{15}
+\bibcite{mishra2017meta}{16}
+\bibcite{munkhdalai2017meta}{17}
+\bibcite{perez2017effectiveness}{18}
+\bibcite{ravi2016optimization}{19}
+\bibcite{santoro2016meta}{20}
+\bibcite{snell2017prototypical}{21}
+\bibcite{sun2018meta}{22}
+\bibcite{sung2018learning}{23}
+\bibcite{thrun2012learning}{24}
+\bibcite{vinyals2016matching}{25}
+\bibcite{wang2019survey}{26}
+\bibcite{zhu2017unpaired}{27}

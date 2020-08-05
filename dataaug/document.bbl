@@ -1,0 +1,33 @@
+\begin{thebibliography}{1}
+
+\bibitem{garcia2017few}
+{\sc Garcia, V., and Bruna, J.}
+\newblock Few-shot learning with graph neural networks.
+\newblock {\em arXiv preprint arXiv:1711.04043\/} (2017).
+
+\bibitem{goodfellow2014generative}
+{\sc Goodfellow, I., Pouget-Abadie, J., Mirza, M., Xu, B., Warde-Farley, D.,
+  Ozair, S., Courville, A., and Bengio, Y.}
+\newblock Generative adversarial nets.
+\newblock In {\em Advances in neural information processing systems\/} (2014),
+  pp.~2672--2680.
+
+\bibitem{krizhevsky2012imagenet}
+{\sc Krizhevsky, A., Sutskever, I., and Hinton, G.~E.}
+\newblock Imagenet classification with deep convolutional neural networks.
+\newblock In {\em Advances in neural information processing systems\/} (2012),
+  pp.~1097--1105.
+
+\bibitem{pan2010survey}
+{\sc Pan, S.~J., and Yang, Q.}
+\newblock A survey on transfer learning.
+\newblock {\em IEEE Transactions on knowledge and data engineering 22}, 10
+  (2010), 1345--1359.
+
+\bibitem{wang2019survey}
+{\sc Wang, W., Zheng, V.~W., Yu, H., and Miao, C.}
+\newblock A survey of zero-shot learning: Settings, methods, and applications.
+\newblock {\em ACM Trans. Intell. Syst. Technol. 10}, 2 (Jan. 2019),
+  13:1--13:37.
+
+\end{thebibliography}

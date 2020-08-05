@@ -1,0 +1,687 @@
+\documentclass{article}
+
+\usepackage[a4paper,width=160mm,top=25mm,bottom=20mm]{geometry}
+\usepackage{fancyhdr}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[english]{babel}
+\usepackage[usenames,dvipsnames,svgnames,table]{xcolor}
+\usepackage{hyperref}
+\usepackage{graphicx}
+\usepackage{amssymb}
+\usepackage{amsmath}
+\usepackage{amsthm}
+\usepackage{mathtools}
+\usepackage{algorithm}
+\usepackage{algorithmicx,algpseudocode}
+\let\oldReturn\Return
+\renewcommand{\Return}{\State\oldReturn}
+
+\usepackage{draftwatermark}
+% \usepackage[firstpage]{draftwatermark}
+
+\DeclareMathOperator*{\argmax}{arg\,max}
+\DeclareMathOperator*{\argmin}{arg\,min}
+
+\newcommand\numberthis{\addtocounter{equation}{1}\tag{\theequation}}
+
+\newtheorem{theorem}{Theorem}
+\newtheorem{lemma}{Lemma}
+\newtheorem{definition}{Definition}
+\newtheorem{remark}{Remark}
+
+\SetWatermarkText{\textbf{Draft}}
+\SetWatermarkScale{5}
+\SetWatermarkAngle{30}
+\SetWatermarkFontSize{2cm}
+% \SetWatermarkColor[rgb]{1,0,0}
+\SetWatermarkColor[gray]{0.9}
+
+
+\fancypagestyle{firstpage}{
+    \fancyhead{}
+    \renewcommand{\headrulewidth}{0.5pt}
+}
+
+\pagestyle{fancy}
+\fancyhf{}
+\renewcommand{\sectionmark}[1]{\markright{#1}}
+% \fancyhead[L]{\rightmark} % L (left), R (right), C (center)
+\fancyhead[R]{\rightmark}
+\fancyfoot[R]{\thepage}
+
+\allowdisplaybreaks
+
+
+\title{Notes on Graph-structured Sparsity Optimization}
+\author{Fei Jie \\ \href{mailto:hfut\_jf@aliyun.com}{hfut\_jf@aliyun.com}}
+
+
+\begin{document}
+
+\maketitle
+\thispagestyle{firstpage}
+
+
+\begin{abstract}
+This note is a summary for works on graph-structured nonconvex optimization by Prof. Feng Chen's lab. They borrows ideas from structured sparse learning, which only focuses on several limited score functions and specific structures. Graph-structured nonconvex optimization generalizes the structured sparse learning to generic graph structure and optimize any differentiable score function. The works' were deployed in subgraph detection tasks to validate their effectiveness and efficiency.
+\end{abstract}
+
+\section{Introduction}
+
+
+\section{Preliminary}
+
+\subsection{Approximation algorithms for the projection oracle $\mathrm{P}({\bf x})$}
+
+There are two nearly-linear time approximation algorithms \cite{hegde2015nearly} that have the following properties:
+\begin{itemize}
+	\item \textbf{Tail approximation} ($\mathrm{T}({\bf x})$): Find a $S\subseteq \mathbb{V}$ such that
+	\begin{equation}
+		\|{\bf x}-{\bf x}_S\|_2\leq c_T\cdot\min_{S
+		\in\mathbb{M}(\mathbb{G},k_T)}\|{\bf x}-{\bf x}_{S'}\|_2
+	\end{equation}
+	where $c_T=\sqrt{7},k_T=5s$, and ${\bf x}_S$ is the restriction of ${\bf x}$ to indices in $S$: we have $({\bf x}_S)_i=x_i$ for $i\in S$ and $({\bf x}_S)_i = 0$ otherwise.
+	\item \textbf{Head approximation} ($\mathrm{H}({\bf x})$): Find a $S\subseteq\mathbb{V}$ such that
+	\begin{equation}
+		\|{\bf x}_S\|_2\geq\cdot\max_{S'\in\mathbb{M}(\mathbb{G},k_H)}\|{\bf x}_{S'}\|_2
+	\end{equation}
+	where $c_H=\sqrt{1/14}$ and $k_H=2s$.
+\end{itemize}
+
+
+\section{\textsc{Graph}-\textsc{Mp}}
+
+This section is a summary for IJCAI 2016 paper \cite{chen2016generalized}, which introduces \textsc{Graph}-\textsc{Mp} algorithm.
+
+\subsection{Problem Statement}
+
+Given an underlying graph $\mathbb{G}=(\mathbb{V},\mathbb{E})$ defined on the coefficients of the unknown vector ${\bf x}$, where $\mathbb{V}=[n]$,$\mathbb{E}\subseteq\mathbb{V}\times\mathbb{V}$. The sparsity model of connected subgraphs in $\mathbb{G}$ is defined as
+\begin{equation}
+\mathbb{M}(\mathbb{G},s)=\{S\subseteq\mathbb{V}||S|\leq s, S \text{ is connected} \}
+\end{equation}
+The problem to be studied is formulated as:
+\begin{equation}\label{prob:graphmp}
+\min_{{\bf x}\in\mathbb{R}^n} f({\bf x})\quad\mathrm{s.t.}\quad\mathrm{supp}\in\mathbb{M}(\mathbb{G},s)
+\end{equation}
+The key idea is to decompose this problem to sub-problems that are easier to solve. These sub-problems include and optimization sub-problem of $f({\bf x})$ that is independent on $\mathbb{G}(\mathbb{G},s)$ and projection approximations for $\mathbb{M}(\mathbb{G},s)$, including $\mathrm{H}({\bf x})$ and $\mathrm{T}({\bf x})$.
+
+\subsection{Algorithm}
+
+\begin{algorithm}
+\caption{\textsc{Graph}-\textsc{Mp}}\label{alg:graphmp}
+\begin{algorithmic}[1]
+\State \textbf{Input}: Input graph $\mathbb{G}$, maximum subgraph size $s$, and step size $\eta$ (1 by default).
+\State \textbf{Output}: The estimated vector $\hat{{\bf x}}$ and the corresponding connected subgraph $S$.
+\State $i\gets 0$, ${\bf x}^i\gets {\bf 0}$, $S^i\gets\emptyset$
+\Repeat
+\State $\Gamma\gets\mathrm{H}(\nabla f({\bf x}))$
+\State $\Omega\gets\Gamma\cup\mathrm{supp}({\bf x}^i)$
+\State ${\bf b}\gets\argmin_{{\bf x}\in\mathbb{R}^n}f({\bf x})\quad\mathrm{s.t.}\quad\mathrm{supp}({\bf x})\in\Omega$\label{alg:mp:argmin}
+\State $S^{i+1}\gets\mathrm{T}({\bf b})$
+\State ${\bf x}^{i+1}\gets{\bf b}_{S^{i+1}}$
+\State $i\gets i+1$
+\Until{halting condition holds}
+\Return $\hat{{\bf x}}={\bf x}^i$ and $S=\mathbb{G}_{S^i}$
+\end{algorithmic}
+\end{algorithm}
+
+\subsection{Theoretical Analysis}
+
+\begin{definition}[Weak Restricted Strong Convexity Property (WRSC)]
+A function $f({\bf x})$ has the $(\xi,\delta,\mathbb{M})$-WRSC if $\forall {\bf x},{\bf y}\in\mathbb{R}^n$ and $\forall S\in\mathbb{M}$ with $\mathrm{supp}({\bf x})\cup\mathrm{supp}({\bf y})\subseteq S$, the following inequality holds for some $\xi>0$ and $0<\delta<1$:
+\begin{equation}
+\|{\bf x}-{\bf y}-\xi \nabla_{S}f({\bf x})+\xi \nabla_S f({\bf y})\|_2\leq \delta\|{\bf x}-{\bf y}\|_2
+\end{equation}
+\end{definition}
+The WRSC is weaker than the \textit{Restricted Strong Convexity/Smoothness} (RSC/RSS) conditions that are used in theoretical analysis of convex optimization algorithms. The RSC/RSS conditions imply condition WRSC, which indicates that WRSC is no stronger than RSC/RSS.
+
+\begin{theorem}\label{thm:mp:converge}
+Consider the graph-structured sparsity model $\mathbb{M}(\mathbb{G},s)$ for some $s\in\mathbb{N}$ and a cost function $f:\mathbb{R}^n\to\mathbb{R}$ that satisfies condition $(\xi,\delta,\mathbb{M}(\mathbb{G},8s))$-WRSC. If $\eta=c_H(1-\delta)-\delta>0,\rho=\xi(1+c_H)$, then for any true ${\bf x}\in\mathbb{R}^n$ with $\mathrm{supp}({\bf x})\in\mathbb{M}(\mathbb{G},s)$, the iterations of Algorithm \ref{alg:graphmp} obey
+\begin{equation}
+\|{\bf x}^{i+1}-{\bf x}\|_2\leq\alpha\|{\bf x}^i-{\bf x}\|_2+\beta\|\nabla_I f({\bf x})\|_2
+\end{equation}
+where $\beta=\frac{\xi(1+c_T)}{1-\delta}\left[\frac{(1+c_H)}{\eta}+\frac{\eta(1+c_H)}{\sqrt{1-\eta^2}}+1 \right]=\frac{(1+c_T)}{1-\delta}\left[\frac{\rho}{\eta}+\frac{\eta\rho}{\sqrt{1-\eta^2}}+\xi \right]$, $\alpha=\frac{(1+c_T)}{1-\delta}\sqrt{1-\eta^2}$, and $I=\argmax_{S\in\mathbb{M}(\mathbb{G},8s)}\|\nabla_S f({\bf x})\|_2$.
+\end{theorem}
+\begin{proof}
+A proof of this result can be found in Appendix.
+\end{proof}
+
+\begin{theorem}\label{thm:mp:time}
+Let ${\bf x}\in\mathbb{R}^n$ be a true optimum such that $\mathrm{supp}({\bf x})\in\mathbb{M}(\mathbb{G},s)$, and $f:\mathbb{R}^n\to\mathbb{R}$ be a cost function that satisfies condition $(\xi,\delta,\mathbb{M}(\mathbb{G},8s))$-WRSC. Assuming that $\alpha<1$, \textsc{Graph}-\textsc{Mp} returns a $\hat{{\bf x}}$ such that $\mathrm{supp}(\hat{\bf x})\in\mathbb{M}(\mathbb{G},5s)$ and $\|{\bf x}-\hat{\bf x}\|_2\leq c\|\nabla_I f({\bf x})\|_2$, where $c=1+\frac{\beta}{1-\alpha}$ is a fixed constant. Moreover, \textsc{Graph}-\textsc{Mp} runs in time
+\begin{equation}
+O((T+|\mathbb{E}|\log^3 n)\log(\|{\bf x}\|_2/\|\nabla_I f({\bf x})\|_2))
+\end{equation}
+where $T$ is the time complexity of one execution of the sub problem in Line \ref{alg:mp:argmin}. In particular, if $T$ scales linearly with $n$, then \textsc{Graph}-\textsc{Mp} scales nearly linearly with $n$.
+\end{theorem}
+\begin{proof}
+A proof of this result can be found in Appendix.
+\end{proof}
+
+\section{\textsc{Graph}-IHT and \textsc{Graph}-GHTP}
+
+This section introduce Baojian Zhou's 2016 ICDM work \cite{zhou2016graph}, in which he proposes two algorithms: \textsc{Graph}-IHT and \textsc{Graph}-GHTP.
+
+\subsection{Problem Statement}
+
+These two algorithms solve the same problem as problem (\ref{prob:graphmp}).
+
+\subsection{Algorithm}
+
+\begin{algorithm}
+\caption{\textsc{Graph}-IHT}\label{alg:graphiht}
+\begin{algorithmic}[1]
+\State \textbf{Input}: Input graph $\mathbb{G}$, maximum subgraph size $s$, and step size $\eta$ (1 by default).
+\State \textbf{Output}: The estimated vector $\hat{{\bf x}}$ and the corresponding connected subgraph $S$.
+\State $i\gets 0$, ${\bf x}^i\gets {\bf 0}$, $S^i\gets\emptyset$
+\Repeat
+\State $\Omega\gets\mathrm{H}(\nabla f({\bf x}))$
+\State ${\bf b}\gets{\bf x}^{i} -\eta\cdot \nabla_{\Omega} f({\bf x}^i)$\label{alg:iht:update}
+\State $S^{i+1}\gets\mathrm{T}({\bf b})$
+\State ${\bf x}^{i+1}\gets{\bf b}_{S^{i+1}}$
+\State $i\gets i+1$
+\Until{halting condition holds}
+\Return $\hat{{\bf x}}={\bf x}^i$ and $S=\mathbb{G}_{S^i}$
+\end{algorithmic}
+\end{algorithm}
+
+\begin{algorithm}
+\caption{\textsc{Graph}-GHTP}\label{alg:graphghtp}
+\begin{algorithmic}[1]
+\State \textbf{Input}: Input graph $\mathbb{G}$, maximum subgraph size $s$, and step size $\eta$ (1 by default).
+\State \textbf{Output}: The estimated vector $\hat{{\bf x}}$ and the corresponding connected subgraph $S$.
+\State $i\gets 0$, ${\bf x}^i\gets {\bf 0}$, $S^i\gets\emptyset$
+\Repeat
+\State $\Omega\gets\mathrm{H}(\nabla f({\bf x}))$
+\State $\Psi\gets\mathrm{supp}({\bf x}^i-\eta\cdot\nabla_{\Omega} f({\bf x}^i))$
+\State ${\bf b}\gets\argmin_{{\bf x}\in\mathbb{R}^n}f({\bf x})\quad\mathrm{s.t.}\quad \mathrm{supp}({\bf x})\subseteq\Psi$\label{alg:ghtp:argmin}
+\State $S^{i+1}\gets\mathrm{T}({\bf b})$
+\State ${\bf x}^{i+1}\gets{\bf b}_{S^{i+1}}$
+\State $i\gets i+1$
+\Until{halting condition holds}
+\Return $\hat{{\bf x}}={\bf x}^i$ and $S=\mathbb{G}_{S^i}$
+\end{algorithmic}
+\end{algorithm}
+
+
+\subsection{Theoretical Analysis of \textsc{Graph}-IHT}
+
+\begin{theorem}\label{thm:iht:converge}
+Consider the sparsity model of connected subgraphs $\mathbb{M}(\mathbb{G},s)$ for some $s\in\mathbb{N}$ and a cost function $f:\mathbb{R}^n\to\mathbb{N}$ that satisfies the $(\xi,\delta,\mathbb{M}(\mathbb{G},5s))$-WRSC condition. If $\eta=c_H(1-\delta)-\delta$, $\rho=\delta(1+c_H)$, then for any ${\bf x}\in\mathbb{R}^n$ such that $\mathrm{supp}({\bf x})\in\mathbb{M}(\mathbb{G},s)$, with $\eta>0$ the iterations of Algorithm \ref{alg:graphiht} obey
+\begin{equation}
+\|{\bf x}^{i+1}-{\bf x}\|_2\leq\alpha\|{\bf x}^i-{\bf x}\|_2+\beta\|\nabla_I f({\bf x})\|_2
+\end{equation}
+where
+\begin{gather*}
+\textcolor{red}{\alpha=(1+c_T)\left(\sqrt{1-\eta^2}+1-\frac{\eta}{\xi}+(2-\frac{\eta}{\xi})\delta\right)},\\
+\textcolor{red}{\beta=(1+c_T)\left(\eta+\frac{\rho}{\eta}+\frac{\eta\rho}{\sqrt{1-\eta^2}} \right)},
+\end{gather*}
+and $I=\argmax_{S\in\mathbb{M}(\mathbb{G},8k)}\|\nabla_S f({\bf x})\|_2$
+\end{theorem}
+\begin{proof}
+A proof of this result can be found in Appendix.
+\end{proof}
+
+\subsection{Theoretical Analysis of \textsc{Graph}-GHTP}
+
+\begin{theorem}\label{thm:ghtp:converge}
+Consider the sparsity model of connected subgraphs $\mathbb{M}(\mathbb{G},s)$ for some $s\in\mathbb{N}$ and a cost function $f:\mathbb{R}^n\to\mathbb{R}$ that satisfies the $(\xi,\delta,\mathbb{M}(\mathbb{G},5s))$-WRSC. If $\eta=c_H(1-\delta)-\delta,\rho=\delta(1+c_H)$, then for any ${\bf x}\in\mathbb{R}^n$ such that $\mathrm{supp}({\bf x})\in\mathbb{M}(\mathbb{G},s)$, with $\eta>0$ the iterations of Algorithm \ref{alg:graphghtp} obey
+\begin{equation}
+\|{\bf x}^{i+1}-{\bf x}\|_2\leq\alpha\|{\bf x}^i-{\bf x}\|_2+\beta\|\nabla_I f({\bf x})\|_2
+\end{equation}
+where 
+\begin{gather*}
+\alpha=\frac{\sqrt{2}(1+c_T)}{1-\delta}\left(\sqrt{1-\eta^2}+\left((2-\frac{\eta}{\xi})\delta+1-\frac{\eta}{\xi} \right) \right),\\
+\beta=\frac{1+c_T}{1-\delta}\left((1+2\sqrt{2})\xi+(2-2\sqrt{2})\eta+\frac{\sqrt{2}\rho}{\eta}+\frac{\sqrt{2}\eta\rho}{\sqrt{1-\eta^2}} \right),
+\end{gather*}
+and $I=\argmax_{S\in\mathbb{M}(\mathbb{G}, 8s)}\|\nabla_S f({\bf x})\|_2$.
+\end{theorem}
+\begin{proof}
+A proof of this result can be found in Appendix.
+\end{proof}
+
+\begin{theorem}\label{thm:ghtp:iht:time}
+Let ${\bf x}\in\mathbb{R}^n$ such that $\mathrm{supp}({\bf x})\in\mathbb{M}(\mathbb{G},s)$, and $f:\mathbb{R}^n\to\mathbb{R}$ be cost function that satisfies condition $(\xi,\delta,\mathbb{M}(\mathbb{G},8s))$-WRSC. Assuming that $\alpha<1$, \textsc{Graph}-GHTP (or \textsc{Graph}-IHT) returns a $\hat{\bf x}$ such that, $\mathrm{supp}(\hat{\bf x})\in\mathbb{M}(\mathbb{G},5s)$ and $\|{\bf x}-\hat{\bf x}\|_2\leq c\|\nabla_I f({\bf x})\|_2$, where $c=1+\frac{\beta}{1-\alpha}$ is a fixed constant. Moreover, \textsc{Graph}-GHTP (or \textsc{Graph}-IHT) runs in time
+\begin{equation}
+O\left((T+|E|\log^3 n)\log\left(\frac{\|{\bf x}\|_2}{\|\nabla_I f({\bf x})\|_2} \right) \right)
+\end{equation}
+where $T$ is the time complexity of one execution of the subproblem in Step \ref{alg:ghtp:argmin} in \textsc{Graph}-GHTP (or Step \ref{alg:iht:update} in \textsc{Graph}-IHT). In particular, if $T$ scales linearly with $n$, then \textsc{Graph}-GHTP (or \textsc{Graph}-IHT) scales nearly linearly with $n$.
+\end{theorem}
+
+\section{\textsc{SG}-Pursuit}
+
+\subsection{Problem Statement}
+
+We consider a multi-attributed network that is defined as $\mathbb{G}=(\mathbb{V},\mathbb{E},\mathbf{w})$, where $\mathbb{V}=\{1,\dots,n \}$ is the ground set of nodes of size $n$, $\mathbb{E}\subseteq\mathbb{V}\times\mathbb{V}$ is the set of edges, and the function $\mathbf{w}:\mathbb{V}\to\mathbb{R}^p$ defines a vector of attributes of size $p$ for each node $v\in\mathbb{V}:\mathbf{w}(v)\in\mathbb{R}^p$. For simplicity, we denote the attribute vector $\mathbf{w}(v)$ by $\mathbf{w}_v$.
+
+We introduce two vectors of coefficients, including $x\in\mathbb{R}^n$ and $y\in\mathbb{R}^p$, that will be optimized for detecting the most interesting subspace cluster in $\mathbb{G}$, where ${\bf x}$ identifies the cluster (subset) of nodes and ${\bf y}$ identifies their relevant attributes. In particular, the vector ${\bf x}$ refers to the vector of coefficients of the nodes in $\mathbb{V}$. Each node $i\in\mathbb{V}$ has a coefficient score $x_i$ indicating the importance of this node in the cluster of interest. Similarly, the vector ${\bf y}$ refers to the vector of coefficients of the $p$ attributes. Each attribute $j\in\{1,\dots,p\}$ has a coefficient score $y_j$ indicating the relevance of this attribute to the clusters of interest. Let $\mathrm{supp}({\bf x})$ be the support set of indices of nonzero entries in ${\bf x}:\mathrm{supp}({\bf x})=\{i|x_i\neq 0 \}$. Then the support set of $\mathrm{supp}({\bf x})$ represents the subset of nodes that belong to the cluster of interest. The support set $\mathrm{supp}({\bf y})$ represents the subset of relevant attributes. We define the feasible space of clusters of nodes as
+\begin{equation*}
+\mathbb{M}(\mathbb{G},s)=\{S|S\subseteq\mathbb{V};|S|\leq s;\mathbb{G}_S \text{ satisfies predefined topological constraints} \},
+\end{equation*}
+where $S$ refers to a subset of nodes in $\mathbb{V}, \mathbb{G}_S=\{S,\mathbb{E}\cap S\times S \}$ refers to the subgraph included by $S$, $|S|$ refers to the total number of nodes in $S$, and $s$ refers to an upper bound on the size of the cluster. The topological constraints can be any topological constraints on $\mathbb{G}_S$, such as connected subgraphs, dense subgraph, subgraphs that are isomorphic to a query graph, compact subgraphs, trees, and paths, among others.
+
+Based on the above notations, we consider a general form of the subspace cluster detection problem as
+\begin{equation*}
+\max_{{\bf x}\in C_{\bf x},{\bf y}\in C_{\bf y}} f({\bf x}, {\bf y})\qquad \mathrm{s.t.}\qquad \mathrm{supp}({\bf x})\in\mathbb{M}(\mathbb{G}, s) \text{ and }\|{\bf y}\|_0\leq k
+\end{equation*}
+where $f({\bf x}, {\bf y}):\mathbb{R}^n\times\mathbb{R}^p\to\mathbb{R}$ is a score function that measures the overall level of interestingness of the subspace clusters indicated by ${\bf x}$ and ${\bf y}$; $C_{\bf x}\subseteq\mathbb{R}^n$ represents a convex set in the Euclidean space $\mathbb{R}^n$, $C_{\bf y}\subseteq\mathbb{R}^p$ represents a convex set in the Euclidean space $\mathbb{R}^p$, $\mathbb{M}(\mathbb{G}, s)$ refers to the feasible space of clusters of nodes as defined above, and $k$ refers to an upper bound on the number of attributes relevant to the subspace clusters of interest. The parameters $s$ and $k$ are predefined by the user.
+
+\subsection{Algorithm}
+
+\begin{algorithm}
+\caption{SG-Pursuit}\label{alg:sgpursuit}
+\begin{algorithmic}[1]
+\State \textbf{Input}: Input graph $\mathbb{G}$, maximum subgraph size $k$, maximum selected feature size $s$, and step size $\eta$ (1 by default).
+\State \textbf{Output}: The estimated vectors of coefficients of nodes and attributes, including $\hat{{\bf x}}$ and $\hat{{\bf y}}$, and the identified subspace cluster $C$.
+\State $i\gets 0$, ${\bf x}^i, {\bf y}^i\gets \text{initial vectors}$
+\Repeat
+\State $\Gamma_{{\bf x}}=\mathrm{H}(\nabla_{\bf x}f({\bf x}^i, {\bf y}^i))$
+\State $\Gamma_{{\bf y}}=\argmax_{R\subseteq\{1,\dots,p \}}\{\|[\nabla_{{\bf y}}f({\bf x}^i, {\bf y}^i)]_{R}\|_2^2:\|R\|_0\leq 2s\}$
+\State $\Omega_{{\bf x}}=\Gamma_{{\bf x}}\cup\mathrm{supp}({\bf x}^i)$
+\State $\Omega_{{\bf y}}=\Gamma_{{\bf y}}\cup\mathrm{supp}({\bf y}^i)$
+\State $({\bf b}_{{\bf x}}^i, {\bf b}_{{\bf y}}^i)=\argmax_{{\bf x}\in C_{{\bf x}},{\bf y}\in C_{{\bf y}}}f({\bf x}, {\bf y})\quad\mathrm{s.t.}\quad\mathrm{supp}({\bf x})\subseteq\Omega_{{\bf x}},\mathrm{supp}({\bf y})\subseteq\Omega_{{\bf y}}$
+\State $\Psi_{{\bf x}}^{i+1}=\mathrm{T}({\bf b}_{{\bf x}}^i)$
+\State $\Psi_{{\bf y}}^{i+1}=\argmax_{R\subseteq\{1,\dots,p\}}\{\|[{\bf b}_{{\bf y}^i}]_{R}\|_2^2:\|R\|_0\leq s \}$
+\State ${\bf x}^{i+1}=[{\bf b}_{{\bf x}}^i]_{\Psi_{{\bf x}}^{i+1}}$
+\State ${\bf y}^{i+1}=[{\bf b}_{{\bf y}}^i]_{\Psi_{{\bf y}}^{i+1}}$
+\State $i\gets i+1$
+\Until{halting condition holds}
+\Return $\hat{{\bf x}}={\bf x}^i$ and $S=\mathbb{G}_{S^i}$
+\end{algorithmic}
+\end{algorithm}
+
+\subsection{Theoretical Analysis}
+
+x\cite{chen2017generic}
+
+
+\section{Graph Block-Structured Matching Pursuit}
+
+\subsection{Problem Statement}
+
+Suppose we are given such a network $\mathbb{G} = (\mathbb{V}, \mathbb{E}, {\bf W})$, where $\mathbb{V} = \{1, \cdots, N\}$ is the ground set of vertices,  $\mathbb{E} \subseteq \mathbb{V}\times \mathbb{V}$ is the ground set of edges, ${\bf W} = [{\bf  w}_1, \cdots, {\bf w}_N]\in \mathbb{R}^{P\times N}$ is the feature matrix, and ${\bf w}_i\in \mathbb{R}^P$ is the feature vector of vertex $i$. Suppose $\mathbb{V}$ is decomposed to $K$ disjoint subsets (blocks) of vertices: $\mathbb{V} = \mathbb{V}^1\cup  \cdots \cup \mathbb{V}^K$, where $N_k = |\mathbb{V}^k|$ is the size of the subset of vertices $\mathbb{V}^k$.   
+The general subgraph detection problem in multiple blocks can be formulated as following general block-structured optimization problem: 
+\begin{equation}
+\begin{gathered}
+\min_{{\bf x}=({\bf x}^1,\dots,{\bf x}^K)} F({\bf x})=f({\bf x}^1, \cdots, {\bf x}^K) + \sum_{k=1}^K g_k({\bf x}^k), \ \  \\
+\mathrm{s.t.}\ \ \mathrm{supp}({\bf x}^k) \in \mathbb{M}_k(\mathbb{G}, s),\ \  k = 1, \cdots, K \label{eq:gen_prob}    
+\end{gathered}
+\end{equation}
+where the vector ${\bf x} \in \mathbb{R}^N$ is partitioned into multiple disjoint blocks ${\bf x}^1 \in \mathbb{R}^{N_1}, \cdots, {\bf x}^K \in \mathbb{R}^{N_K}$, $f$ is a continuous differentiable and convex function, each $g_k$ is extended-valued and possibly nondifferentiable convex function, $\text{supp}({\bf x}^k)$ denotes the support set of vector ${\bf x}^k$, $\mathbb{M}_k(\mathbb{G}, s)$
+denotes all possible subsets of vertices in $\mathbb{G}$ that satisfy a certain predefined topological constraint. The functions $f$ and $g_k$ will be defined based on the feature matrix ${\bf W}$, and can be used to formulate the cost function and dependencies among blocks.
+
+One example of topological constraint for defining $\mathbb{M}_k(\mathbb{G}, s)$ is connected subgraph, and we can formally define it as follows:
+\begin{equation}
+    \mathbb{M}_k(\mathbb{G}, s) \coloneqq \{S | S \subseteq \mathbb{V}^k; |S| \leq s; \mathbb{G}_S \text{ is connected.} \}
+\end{equation}
+where $s$ is a predefined upperbound size of S, $S\subseteq \mathbb{V}^k$ , and $\mathbb{G}_S$ refers to the induced subgraph by a set of vertices $S$. The topological constraints can be any graph structured sparsity constraints on $\mathbb{G}_S$, such as connected subgraphs, dense subgraphs, compact subgraphs \cite{chen2017generic}. Moreover, we do not restrict all $\mathrm{supp}({\bf x}^1),\cdots, \mathrm{supp}({\bf x}^K)$ satisfy an identical topological constraint.
+
+\subsection{Algorithm}
+
+\begin{algorithm}%[H]
+	\begin{algorithmic}[1]
+		\State \textbf{Initialization}, $ i=0 $, $ {\bf x}^{k,i}=\text{initial vectors}$, k=1,\dots, K
+		\Repeat
+		\For{$k = 1,\cdots, K$}
+		\State $\Gamma_{{\bf x}^{k}}=H(\nabla_{{\bf x}^{k}} F({\bf x}^{1,i}, \dots,{\bf x}^{K,i}))$
+		\State $\Omega_{{\bf x}^{k}}=\Gamma_{{\bf x}^{k}}\cup\mathrm{supp}({\bf x}^{k,i})$
+		\EndFor
+		% \abovedisplayskip=-0.7\baselineskip
+		\State Get $({\bf b}_{{\bf x}^1}^i,\dots,{\bf b}_{{\bf x}^K}^i)$ by solving problem (\ref{sub-p1})\label{alg:line:subproblem}
+		%\begin{flalign*}
+		%     &\left( {\bf b}_{{\bf x}^1}^i,\dots,{\bf b}_{{\bf x}^K}^i \right)&\\
+		%     &= \argmax\limits_{{\bf x}^1,\dots,{\bf x}^K} f({\bf x}^1,\dots,{\bf x}^K) + \sum_{k=1}^{K} g_k({\bf x}^k) & \\
+		%     &\, \mathrm{s.t.}\,\, \mathrm{supp}({\bf x}^k)\subseteq \Omega_{{\bf x}^k}&
+		% \end{flalign*}
+		% \vspace{-\baselineskip}
+		\For{$k = 1, \cdots, K$}
+		\State $ \Psi_{{\bf x}^{k}}^{i+1}=\mathrm{T}({\bf b}_{{\bf x}^k}^i) $
+		\State $ {\bf x}^{k,i+1}=[{\bf b}_{{\bf x}^{k}}^i]_{\Psi_{{\bf x}^{k}}^{i+1}} $
+		\EndFor
+		\State $ i=i+1 $
+		\Until{$ \sum_{k=1}^{K} \left\|{\bf x}^{k,i+1}-{\bf x}^{k,i}\right\|\leq \epsilon $}
+		\State $ C=(\Psi_{x^1}^{i}, \dots, \Psi_{{\bf x}^k}^{i}) $
+		\Return $ ( {\bf x}^{1,i}, \cdots, {\bf x}^{K,i}) , C $
+	\end{algorithmic}
+	\caption{Graph Block-structured Matching Pursuit}\label{alg:gbmp}
+\end{algorithm}
+
+\subsection{Theoretical Analysis}
+
+\section{Graph Block-Structured Iterative Hard Thresholding}
+
+\subsection{Algorithm}
+
+\begin{algorithm}
+	\caption{Graph Block-structured Iterative Hard Thresholding (GBIHT)}\label{alg:gbiht}
+	\begin{algorithmic}[1]
+		\State \textbf{Input}: Input graph $\mathbb{G}$, maximum subgraph size $k$, and step size $\eta$ (1 by default).
+		\State \textbf{Output}: The estimated vector $\hat{{\bf x}}$ and the corresponding connected subgraph $S$.
+		\State \textbf{Initialization}, $ i=0 $, ${\bf x}^i=({\bf x}^{1,i},\dots,{\bf x}^{K,i}), {\bf x}^{k,i}=\text{initial vectors}$, k=1,\dots, K
+		\State $i\gets 0$, ${\bf x}^i\gets {\bf 0}$, $S^i\gets\emptyset$
+		\Repeat
+		\For{$k=1,\dots,K$}
+		\State $\Omega_k\gets\mathrm{H}(\nabla_{{\bf x}^k} f({\bf x}^{1,i},\dots,{\bf x}^{K,i}))$
+		\EndFor
+		\State $\Omega=\bigcup_{k=1}^K \Omega_k$
+		\State ${\bf b}^i={\bf x}^i-\eta\cdot\nabla_{\Omega}f({\bf x}^i)\text{ or }{\bf b}_{{\bf x}^k}^i={\bf x}^{k,i} -\eta\cdot \nabla_{\Omega_k} f({\bf x}^i), k=1,\dots,K$\label{alg:gbiht:update}
+		\For{k=1,\dots,K}
+		\State $S^{k,i+1}\gets\mathrm{T}({\bf b}_{{\bf x}^k}^i)$
+		\State ${\bf x}^{k,i+1}\gets{\bf b}_{S^{k,i+1}}^i$
+		\EndFor
+		\State $i\gets i+1$
+		\Until{halting condition holds}
+		\Return $\hat{{\bf x}}={\bf x}^i$ and $S=\mathbb{G}_{S^i}$
+	\end{algorithmic}
+\end{algorithm}
+
+\subsection{Theoretical Analysis}
+
+\begin{theorem}\label{thm:blockiht:converge}
+zzz
+\end{theorem}
+
+\section{Graph Block-Structured Gradient Hard Thresholding Pursuit}
+
+\subsection{Algorithm}
+
+\begin{algorithm}
+	\caption{Graph Block-structured Gradient Hard Thresholding Pursuit (GBGHTP)}\label{alg:gbghtp}
+	\begin{algorithmic}[1]
+		\State \textbf{Input}: Input graph $\mathbb{G}$, maximum subgraph size $k$, and step size $\eta$ (1 by default).
+		\State \textbf{Output}: The estimated vector $\hat{{\bf x}}$ and the corresponding connected subgraph $S$.
+		\State \textbf{Initialization}, $ i=0 $, ${\bf x}^i=({\bf x}^{1,i},\dots,{\bf x}^{K,i}), {\bf x}^{k,i}=\text{initial vectors}$, k=1,\dots, K
+		\Repeat
+		\For{$k=1,\dots,K$}
+		\State $\Omega_k\gets\mathrm{H}(\nabla _{{\bf x}^k}f({\bf x}^i))$
+		\EndFor
+		\State $\Omega=\bigcup_{k=1}^k \Omega_k$
+		\State $\Psi\gets\mathrm{supp}({\bf x}^i-\eta\cdot\nabla_{\Omega} f({\bf x}^i))$
+		\State ${\bf b}^i\gets\argmin_{{\bf x}\in\mathbb{R}^n}f({\bf x})\quad\mathrm{s.t.}\quad \mathrm{supp}({\bf x})\subseteq\Psi$\label{alg:gbghtp:argmin}
+		\For{k=1,\dots,K}
+		\State $S^{k,i+1}\gets\mathrm{T}({\bf b}_{{\bf x}^k}^i)$
+		\State ${\bf x}^{k,i+1}\gets{\bf b}_{S^{k,i+1}}$
+		\EndFor
+		\State $i\gets i+1$
+		\Until{halting condition holds}
+		\Return $\hat{{\bf x}}={\bf x}^i$ and $S=\mathbb{G}_{S^i}$
+	\end{algorithmic}
+\end{algorithm}
+
+\subsection{Theoretical Analysis}
+
+\clearpage
+\appendix
+
+\section{Proof}
+
+\subsection{Proof of \textsc{Graph}-\textsc{Mp}}
+
+\begin{lemma}\label{lem:wrsc}
+Assume that $f$ is a differentiable function. If $f$ satisfies condition $(\xi,\delta,\mathbb{M})$-WRSC, then $\forall {\bf x}, {\bf y}\in\mathbb{R}^n$ with $\mathrm{supp}({\bf x})\cup\mathrm{supp}({\bf y})\subseteq S\in\mathbb{M}$, the following two inequalities hold \cite{yuan2014gradient}
+\begin{gather*}
+\frac{1-\delta}{\xi}\|{\bf x}-{\bf y}\|_2\leq\|\nabla_S f({\bf x})-\nabla_S f({\bf y})\|_2\leq \frac{1+\delta}{\xi}\|{\bf x}-{\bf y}\|_2\\
+f({\bf x})\leq f({\bf y})+\langle\nabla f({\bf x}),{\bf x}-{\bf y} \rangle+\frac{1+\delta}{2\xi}\|{\bf x}-{\bf y}\|_2
+\end{gather*}
+\end{lemma}
+
+\begin{lemma}\label{lem:omegac}
+Let $\eta=c_H(1-\delta)-\delta,\rho=\xi(1+c_H), {\bf r}^i={\bf x}^i-{\bf x}$, and $\Omega=\mathrm{H}(\nabla f({\bf x}^i))$. Then
+\begin{equation}\label{eq:romegac}
+\|{\bf r}_{\Omega^c}^i\|_2\leq\sqrt{1-\eta^2}\|{\bf r}^i\|_2+\left[\frac{\rho}{\eta} +\frac{\eta\rho}{\sqrt{1-\eta^2}}\right]\|\nabla_I f({\bf x})\|_2
+\end{equation}
+where $I=\argmax_{S\in\mathbb{M}(\mathbb{G},8k)}\|\nabla_S f({\bf x})\|_2$. We assume that $c_H$ and $\delta$ are such that $\eta>0$.
+\end{lemma}
+
+\begin{proof}
+Denote $\Phi=\mathrm{supp}({\bf x})\in\mathbb{M}(\mathbb{G},k),\Omega=\mathrm{H}(\nabla f({\bf x}^i))\in\mathbb{M}(\mathbb{G},2k),{\bf r}^i={\bf x}^i-{\bf x}$, and $\Gamma=\mathrm{supp}({\bf r}^i)\in\mathbb{M}(\mathbb{G},6k)$. The component $\|\nabla_{\Omega} f({\bf x}^i)\|_2$ can be lower bounded as
+\begin{align*}
+\|\nabla_{\Omega} f({\bf x}^i)\|_2\geq& c_H\|\nabla_{\Phi}f({\bf x}^i)\|_2\\
+\geq&c_H(\|\nabla_{\Phi}f({\bf x}^i)-\nabla_{\Phi}f({\bf x}) \|_2-\|\nabla_{\Phi} f({\bf x})\|_2)\\
+\geq&\frac{c_H(1-\delta)}{\xi}\|{\bf r}^i\|_2-c_H\|\nabla_I f({\bf x})\|_2
+\end{align*}
+where the first inequality follows from the definition of head approximation and the last inequality follows from Lemma \ref{lem:wrsc}. The component $\|\nabla_{\Omega} f({\bf x}^i)\|_2$ can be also upper bounded as
+\begin{align*}
+\|\nabla_{\Omega} f({\bf x}^i)\|_2\leq&\frac{1}{\xi}\|\xi\nabla_{\Omega}f({\bf x}^i)-\xi\nabla_{\Omega}f({\bf x})\|_2+\|\nabla_{\Omega}f({\bf x})\|_2\\
+\leq&\frac{1}{\xi}\|\xi\nabla_{\Omega}f({\bf x}^i)-\xi\nabla_{\Omega}f({\bf x})-{\bf r}_{\Omega}^i+{\bf r}_{\Omega}^i\|_2+\|\nabla_{\Omega}f({\bf x})\|_2\\
+\leq&\frac{1}{\xi}\|\xi\nabla_{\Gamma\cup\Omega}f({\bf x}^i)-\xi\nabla_{\Gamma\cup\Omega} f({\bf x})-{\bf r}_{\Gamma\cup\Omega}^i\|_2+\|{\bf r}_{\Omega}^i\|_2+\|\nabla_{\Omega}f({\bf x})\|_2\\
+\leq&\frac{\delta}{\xi}\|{\bf r}^i\|_2+\frac{1}{\xi}\|{\bf r}_{\Omega}^i\|_2+\|\nabla_I f({\bf x})\|_2
+\end{align*}
+where the fourth inequality follows from condition $(\xi,\delta,\mathbb{M}(\mathbb{G},8k))$-WRSC and the fact that ${\bf r}_{\Gamma\cup\Omega}^i={\bf r}^i$. Combining the two bounds and grouping terms, we obtain
+\begin{align*}
+\|{\bf r}_{\Omega}^i\|_2\geq&(c_H(1-\delta)-\delta)\|{\bf r}^i\|_2-\xi(1+c_H)\|\nabla_I f({\bf x})\|_2\numberthis\label{eq:romega}\\
+=&\eta\|{\bf r}^i\|_2-\rho\|\nabla_I f({\bf x})\|_2, \eta=c_H(1-\delta)-\delta, \rho=\xi(1+c_H)
+\end{align*}
+We have $\|{\bf r}_{\Omega}^i\|_2\geq\eta\|{\bf r}^i\|_2-\rho\|\nabla_I f({\bf x})\|_2$. In order to otain an upper bound of $\|{\bf r}_{\Omega^c}^i\|_2$, we consider two cases.
+
+\begin{itemize}
+\item Case 1: The right hand side of (\ref{eq:romega}) is $\leq 0$, i.e., $\alpha_0\|{\bf r}^i\|_2\leq\beta_0\|\nabla_I f({\bf x})\|_2$. Then we have
+\[
+\|{\bf r}_{\Omega^c}^i\|_2\leq\|{\bf r}^i\|_2\leq\frac{\rho}{\eta}\|\nabla_I f({\bf x})\|_2
+\]
+\item Case 1: The right hand side of (\ref{eq:romega}) is $> 0$, i.e., $\eta\|{\bf r}^i\|_2>\rho\|\nabla_I f({\bf x})\|_2$. Then we have
+\[
+\|{\bf r}_{\Omega}^i\|_2\geq\left(\eta-\frac{\rho\|\nabla_I f({\bf x})\|_2}{\|{\bf r}^i\|_2} \right)\|{\bf r}^i\|_2
+\]
+\end{itemize}
+Moreover, notice that $\|{\bf r}_{\Omega}^i\|_2^2=\|{\bf r}^i\|_2^2-\|{\bf r}_{\Omega^c}^c\|_2^2$. Then we have obtain
+\begin{gather*}
+\|{\bf r}_{\Omega}^i\|_2^2=\|{\bf r}^i\|_2^2-\|{\bf r}_{\Omega^c}^i\|_2^2\\
+\|{\bf r}_{\Omega^c}^i\|_2\leq\|{\bf r}^i\|_2\sqrt{1-\left(\eta-\frac{\rho\|\nabla_I f({\bf x})\|_2}{\|{\bf r}^i\|_2} \right)^2}
+\end{gather*}
+Denote $\omega_0=\eta-\rho\|\nabla_I f({\bf x})\|_2/\|{\bf r}^i\|_2$. For a given $0<\omega_0<1$ and a free parameter $0<\omega<1$, a straight forward calculation yields that $\sqrt{1-\omega_0^2}\leq\frac{1}{\sqrt{1-\omega^2}}-\frac{\omega}{1-\omega^2}\omega_0$. Therefore, substituting into the bound for $\|{\bf r}_{\Omega^c}^i\|_2$, we get
+\begin{align*}
+\|{\bf r}_{\Omega^c}^i\|_2\leq&\|{\bf r}^i\|_2\left(\frac{1}{\sqrt{1-\omega^2}}-\frac{\omega}{1-\omega^2}\left(\eta-\frac{\rho\|\nabla_I f({\bf x})\|_2}{\|{\bf r}^i\|_2} \right) \right)\\
+=&\frac{1-\omega\eta}{\sqrt{1-\omega^2}}\|{\bf r}^i\|_2+\frac{\omega\rho}{\sqrt{1-\omega^2}}\|\nabla_I f({\bf x})\|_2
+\end{align*}
+The coefficient preceding $\|{\bf r}^i\|_2$ determines the overall convergence rate, and the minimum value of the coefficient is attained by setting $\omega=\eta$ (derived from $(\frac{1-\omega\eta}{\sqrt{1-\omega^2}})'=0$).
+
+Therefore, by combining the two cases, we obtain
+\[
+\|{\bf r}_{\Omega^c}^i\|_2\leq\sqrt{1-\eta^2}\|{\bf r}^i\|_2+\left[\frac{\rho}{\eta}+\frac{\eta\rho}{\sqrt{1-\eta^2}} \right]\|\nabla_I f({\bf x})\|_2
+\]
+which proves the lemma.
+\end{proof}
+
+\paragraph{Proof of Theorem \ref{alg:graphmp}}
+
+\begin{proof}
+Let ${\bf r}^{i+1}={\bf x}^{i+1}-{\bf x}$. $\|{\bf r}^{i+1}\|_2$ is upper bounded as
+\begin{align*}
+\|{\bf r}^{i+1}\|_2=&\|{\bf x}^{i+1}-{\bf x}\|_2\\
+&\text{\color{red}{${\bf x}$ is the optimum of our problem}}\\
+\leq&\|{\bf x}^{i+1}-{\bf b}\|_2+\|{\bf x}-{\bf b}\|_2\\
+\leq&c_T\cdot\|{\bf x}^*-{\bf b}\|_2+\|{\bf x}-{\bf b}\|_2\\
+&\text{\color{red}{${\bf x}^*$ is the optimum of $\min_{{\bf x}'}\|{\bf x}'-{\bf b}\|_2$}}\\ 
+\leq&c_T\|{\bf x}-{\bf b}\|_2+\|{\bf x}-{\bf b}\|_2\\
+&{\color{red}{\|{\bf x}^*-{\bf b}\|_2\leq\|{\bf x}-{\bf b}\|_2}}, {\bf x}^*, {\bf x}\in\mathbb{M}(\mathbb{G}, 5s)\\
+=&(1+c_T)\|{\bf x}-{\bf b}\|_2
+\end{align*}
+which follows from the definition of tail approximation. The component $\|({\bf x}-{\bf b})_{\Omega}\|_2^2$ is upper bounded as
+\begin{align*}
+\|({\bf x}-{\bf b})_{\Omega}\|_2^2=&\left\langle {\bf b}-{\bf x},({\bf b}-{\bf x})_{\Omega} \right\rangle\\
+=&\left\langle{\bf b}-{\bf x}-\xi\nabla_{\Omega} f({\bf b})+\xi\nabla_{\Omega}f({\bf x}),({\bf b}-{\bf x})_{\Omega} \right\rangle-\left\langle \xi\nabla_{\Omega}f({\bf x}), ({\bf b}-{\bf x})_{\Omega} \right\rangle\\
+\leq&\|{\bf b}-{\bf x}-\xi\nabla_{\Omega} f({\bf b})+\xi\nabla_{\Omega} f({\bf x})\|_2\|({\bf b}-{\bf x})_{\Omega}\|_2+\xi\|\nabla_{\Omega} f({\bf x})\|_2\|({\bf b}-{\bf x})_{\Omega}\|_2\\
+\leq&\delta\|{\bf b}-{\bf x}\|_2\|({\bf b}-{\bf x})_{\Omega}\|_2+\xi\|\nabla_{\Omega} f({\bf x})\|_2\|({\bf b}-{\bf x})_{\Omega}\|_2
+\end{align*} 
+where the second equality follows from the fact that $\nabla_{\Omega} f({\bf b})=0$ since ${\bf b}$ is the solution to the problem in step \ref{alg:mp:argmin} of Algorithm \ref{alg:graphmp}, and the last inequality follows from condition $(\xi,\delta,\mathbb{M}(8k,g))$-WRSC. After simplification, we have
+\[
+\|({\bf x}-{\bf b})_{\Omega}\|_2\leq\delta\|{\bf b}-{\bf x}|_2+\xi\|\nabla_{\Omega}f({\bf x})\|_2
+\]
+It follows that
+\begin{align*}
+\|({\bf x}-{\bf b})\|_2\leq&\|({\bf x}-{\bf b})_{\Omega}\|_2+\|({\bf x}-{\bf b})_{\Omega^c}\|_2\\
+\leq&\delta\|{\bf b}-{\bf x}\|_2+\xi\|\nabla_{\Omega}f({\bf x})\|_2+\|({\bf x}-{\bf b})_{\Omega^c}\|_2
+\end{align*}
+After rearrangement, we obtain
+\begin{align*}
+\|{\bf b}-{\bf x}\|_2\leq&\frac{\|({\bf b}-{\bf x})_{\Omega^c}\|_2}{1-\delta}+\frac{\xi\|\nabla_{\Omega} f({\bf x})\|_2}{1-\delta}\\
+=&\frac{\|{\bf x}_{\Omega^c}\|_2}{1-\delta}+\frac{\xi\|\nabla_{\Omega} f({\bf x})\|_2}{1-\delta}\\
+=&\frac{\|({\bf x}-{\bf x}^i)_{\Omega^c}\|_2}{1-\delta}+\frac{\nabla_{\Omega}f({\bf x})}{1-\delta}\\
+=&\frac{\|{\bf r}_{\Omega^c}^i\|_2}{1-\delta}+\frac{\xi\|\nabla_{\Omega} f({\bf x})\|_2}{1-\delta}\\
+\leq&\frac{\|{\bf r}_{\Gamma^c}^i\|_2}{1-\delta}+\frac{\xi\|\nabla_{\Omega}f({\bf x})\|_2}{1-\delta}
+\end{align*}
+where the first equality follows from the fact that $\mathrm{supp}({\bf b})\subseteq\Omega$, the second and last inequalities follow from the fact that $\Omega=\Gamma\cup\mathrm{supp}({\bf x}^i)$. Combining above inequalities, we obtain
+\[
+\|{\bf r}_{\Gamma^c}^{i+1}\|_2\leq(1+c_T)\frac{\|{\bf r}_{\Omega^c}^i\|_2}{1-\delta}+(1+c_T)\frac{\xi\|\nabla_I f({\bf x})\|_2}{1-\delta}
+\]
+From Lemma \ref{lem:omegac}, we have
+\[
+\|{\bf r}_{\Omega^c}^i\|_2\leq\|{\bf r}_{\Gamma^c}^i\|_2\leq\sqrt{1-\eta^2}\|{\bf r}^i\|_2+\left[\frac{\rho}{\eta}+\frac{\eta\rho}{\sqrt{1-\eta}} \right]\|\nabla_I f({\bf x})\|_2
+\]
+Combining the above inequalities, we prove the theorem.
+\end{proof}
+
+\paragraph{Proof of Theorem \ref{thm:mp:time}}
+\begin{proof}
+The $i$-the iteration of Algorithm \ref{alg:graphmp} satisfies
+\begin{equation}
+\|{\bf x}-{\bf x}^i\|_2\leq\alpha^i\|{\bf x}\|_2+\frac{\beta}{1-\alpha}\|\nabla_I f({\bf x})\|_2
+\end{equation}
+After $t=\left\lceil\log\left(\frac{\|{\bf x}\|_2}{\|\nabla_I f({\bf x})\|_2} \right)/\log\frac{1}{\alpha} \right\rceil$ iterations, Algorithm \ref{alg:graphmp} returns an estimate $\hat{\bf x}$ satisfying $\|{\bf x}-\hat{\bf x}\|_2\leq(1+\frac{\beta}{1-\alpha})\|\nabla_I f({\bf x})\|_2$. The time complexities of both head and tail approximations are $O(|\mathbb{E}|\log^3 n)$. The time complexity of one iteration in Algorithm \ref{alg:graphmp} is $(T+|\mathbb{E}|\log^3 n)$, and the total number of iterations is $\left\lceil \log\left(\frac{\|{\bf x}\|_2}{\|\nabla_I f({\bf x})\|_2} \right)\right\rceil$, and the overall time complexity follows.
+\end{proof}
+
+
+\subsection{Proof of \textsc{Graph}-IHT}
+
+\paragraph{Proof of Theorem \ref{thm:iht:converge}}
+\begin{proof}
+From the triangle inequality, we have
+\begin{align*}
+\|{\bf r}^{i+1}\|_2=&\|{\bf x}^{i+1}-{\bf x}\|_2\\
+=&\|{\bf x}^{i+1}-{\bf b}+{\bf b}-{\bf x}\|_2\\
+\leq&\|{\bf x}^{i+1}-{\bf b}\|_2+\|{\bf b}-{\bf x}\|_2\\
+\leq&(1+c_T)\|{\bf b}-{\bf x}\|_2\\
+=&(1+c_T)\|{\bf x}^i-{\color{red}{\eta}}\nabla_{\Gamma}f({\bf x}^i)-{\bf x}\|_2\\
+=&(1+c_T)\|{\bf r}^i-\eta\nabla_{\Gamma}f({\bf x}^i)\|_2
+\end{align*}
+where $\nabla_{\Gamma}f({\bf x}^i)$ is the projected vector of $f({\bf x}^i)$ in which the entries outside $\Omega$ are set to zero and the entries in $\Omega$ are unchanged. $\|{\bf r}^i-\eta\nabla_{\Omega}f({\bf x}^i)\|_2$ has the inequalities
+\begin{align*}
+\|{\bf r}^i-\eta\nabla_{\Omega}f({\bf x}^i)\|_2=&\|{\bf r}_{\Omega^c}^i+{\bf r}_{\Omega}^i-\eta\nabla_{\Omega}f({\bf x}^i)\|_2\\
+\leq&\|{\bf r}_{\Omega^c}^i\|_2+\|{\bf r}_{\Omega}^i-\eta\nabla_{\Omega}f({\bf x}^i)+\eta\nabla_{\Omega}f({\bf x})-\eta\nabla_{\Omega}f({\bf x})\|_2\\
+\leq&\|{\bf r}_{\Omega^c}^i\|_2+\|{\bf r}_{\Omega}^i-\eta\nabla_{\Omega}f({\bf x}^i)+\eta\nabla_{\Omega}f({\bf x})\|_2+\|\eta\nabla_{\Omega}f({\bf x})\|_2\\
+\leq&\|{\bf r}_{\Omega^c}^i\|_2+\|{\bf r}_{\Omega}^i-\xi\nabla_{\Omega}f({\bf x}^i)+\xi\nabla_{\Omega}f({\bf x})\|_2\\
+&+(\xi-\eta)\|\nabla_{\Omega}f({\bf x}^i)-\nabla_{\Omega}f({\bf x})\|_2+\|\eta\nabla_{\Omega}f({\bf x})\|_2\\
+\leq&\|{\bf r}_{\Omega^c}^i\|_2+\delta\|{\bf r}^i\|_2+\frac{(1+\delta)(\xi-\eta)}{\xi}\|{\bf r}^i\|_2+\eta\|\nabla_I f({\bf x})\|_2 \\
+=&\|{\bf r}_{\Omega^c}^i\|_2+\frac{\xi+2\xi\delta-\eta-\eta\delta}{\xi}\|{\bf r}^i\|_2+\eta\|\nabla_I f({\bf x})\|_2\\
+=&\|{\bf r}_{\Omega^c}^i\|_2+(1-\frac{\eta}{\xi}+(2-\frac{\eta}{\xi})\delta)\|{\bf r}^i\|_2+\eta\|\nabla_I f({\bf x})\|_2
+\end{align*}
+where the last inequality follows from condition $(\xi,\delta,\mathbb{M})$-WRSC and Lemma \ref{lem:wrsc}. From Lemma \ref{lem:omegac}, we have
+\[
+\|{\bf r}_{\Omega^c}^i\|_2\leq\sqrt{1-\eta^2}\|{\bf r}^i\|_2+\left[\frac{\rho}{\eta}+\frac{\eta\rho}{\sqrt{1-\eta^2}} \right]\|\nabla_I f({\bf x})\|_2
+\]
+Combining the above inequalities, we prove the theorem.
+\begin{align*}
+\|{\bf r}^{i+1}\|_2=&(1+c_T)\|{\bf r}^i-\eta\nabla_{\Gamma}f({\bf x}^i)\|_2\\
+\leq&(1+c_T)\left(\|{\bf r}_{\Omega^c}^i\|_2+(1-\frac{\eta}{\xi}+(2-\frac{\eta}{\xi})\delta)\|{\bf r}^i\|_2+\eta\|\nabla_I f({\bf x})\|_2 \right)\\
+\leq&(1+c_T)\left(\sqrt{1-\eta^2}\|{\bf r}^i\|_2+\left[\frac{\rho}{\eta}+\frac{\eta\rho}{\sqrt{1-\eta^2}} \right]\|\nabla_I f({\bf x})\|_2\right.\\
+&+\left.(1-\frac{\eta}{\xi}+(2-\frac{\eta}{\xi})\delta)\|{\bf r}^i\|_2+\eta\|\nabla_I f({\bf x}) \right)\\
+=&(1+c_T)\left(\sqrt{1-\eta^2}+1-\frac{\eta}{\xi}+(2-\frac{\eta}{\xi})\delta\right)\|{\bf r}^i\|_2+(1+c_T)\left(\eta+\frac{\rho}{\eta}+\frac{\eta\rho}{\sqrt{1-\eta^2}} \right)\|\nabla_I f({\bf x})\|_2
+\end{align*}
+\end{proof}
+
+\subsection{Proof of \textsc{Graph}-GHTP}
+
+\paragraph{Proof of Theorem \ref{thm:ghtp:converge}}
+
+\begin{proof}
+Denote $\Omega=\mathrm{H}(f({\bf x}^i))$ and $\Psi=\mathrm{supp}({\bf x}^i-\eta\cdot\nabla_{\Omega}f({\bf x}^i))$. Let ${\bf r}^{i+1}={\bf x}^{i+1}-{\bf x}$. $\|{\bf r}^{i+1}\|_2$ is bounded as
+\begin{align*}
+\|{\bf r}^{i+1}\|_2=&\|{\bf x}^{i+1}-{\bf x}\|_2\\
+=&\|{\bf x}^{i+1}-{\bf b}+{\bf b}-{\bf x}\|_2\\
+\leq&\|{\bf x}^{i+1}-{\bf x}\|_2+\|{\bf x}-{\bf b}\|_2\\
+\leq&c_T\|{\bf x}-{\bf b}\|_2+\|{\bf x}-{\bf b}\|_2\\
+\leq&(1+c_T)\|{\bf x}-{\bf b}\|_2\numberthis\label{eq:ghtp:proof:rip1}
+\end{align*}
+where the second inequality follows from the definition of tail approximation. The component $\|({\bf x}-{\bf b})_{\Psi}\|_2^2$ is bounded as
+\begin{align*}
+\|({\bf x}-{\bf b})_{\Psi}\|_2^2=&\langle{\bf b}-{\bf x},({\bf b}-{\bf x})_{\Psi} \rangle\\
+=&\langle{\bf b}-{\bf x}-\xi\nabla_{\Psi}f({\bf b})+\xi\nabla_{\Psi}f({\bf x}), ({\bf b}-{\bf x})_{\Psi}\rangle-\langle\xi\nabla_{\Psi}f({\bf x}),({\bf b}-{\bf x})_{\Psi} \rangle\\
+\leq&\|{\bf b}-{\bf x}-\xi\nabla_{\Psi}f({\bf b})+\xi\nabla_{\Psi}f({\bf x})\|_2\|({\bf b}-{\bf x})_{\Psi}\|+\xi\|\nabla_{\Psi}f({\bf x})\|_2\|({\bf b}-{\bf x})_{\Psi}\|_2\\
+\leq&\delta\|{\bf b}-{\bf x}\|_2\|({\bf b}-{\bf x})_{\Psi}\|_2+\xi\|\nabla_{\Psi}f({\bf x})\|_2\|({\bf b}-{\bf x})_{\Psi}\|_2
+\end{align*}
+where the second equality follows from the fact that $\nabla_S f({\bf b})={\bf 0}$ since ${\bf b}$ is the solution to the problem in the third step (Line \ref{alg:ghtp:argmin}) of \textsc{Graph}-GHTP, and the last inequality can be derived from condition $(\xi,\delta,\mathbb{M}(\mathbb{G},8k))$-WRSC. After simplification, we have
+\[
+\|({\bf x}-{\bf b})_{\Psi}\|_2\leq\delta\|{\bf b}-{\bf x}\|_2+\xi\|\nabla_{\Psi}f({\bf x})\|_2
+\]
+It follows that
+\begin{align*}
+\|{\bf x}-{\bf b}\|_2\leq&\|({\bf x}-{\bf b})_{\Psi}\|_2+\|({\bf x}-{\bf b})_{\Psi^c}\|_2\\
+\leq&\delta\|{\bf b}-{\bf x}\|_2+\xi\|\nabla_{\Psi}f({\bf x})\|_2+\|({\bf x}-{\bf b})_{\Psi^c}\|_2
+\end{align*}
+After rearrangement, we obtain
+\begin{equation}\label{eq:ghtp:proof:xmb}
+\|{\bf b}-{\bf x}\|_2\leq\frac{\|({\bf b}-{\bf x})_{\Psi^c}\|_2}{1-\delta}+\frac{\xi\|\nabla_{\Psi}f({\bf x})\|_2}{1-\delta}
+\end{equation}
+where this equality follows from the fact that $\mathrm{supp}({\bf b})\subseteq S$. Let $\Phi=\mathrm{supp}({\bf x})\in\mathbb{M}(\mathbb{G},k)$.
+\[
+\|({\bf x}^i-\eta\nabla_{\Omega}f({\bf x}^i))_{\Phi}\|_2\leq\|({\bf x}^i-\eta\nabla_{\Omega}f({\bf x}^i))_{\Psi}\|_2
+\]
+as $\Psi=\mathrm{supp}({\bf x}^i-\eta\nabla_{\Omega}f({\bf x}^i))$. By eliminating the contribution on $\Phi\cap\Psi$, we derive
+\[
+\|({\bf x}^i-\eta\nabla_{\Omega}f({\bf x}^i))_{\Phi\setminus\Psi}\|_2\leq\|({\bf x}^i-\eta\nabla_{\Omega}f({\bf x}^i))_{\Psi\setminus\Phi}\|_2
+\]
+For the right-hand side, we have
+\[
+\|({\bf x}^i-\eta\nabla_{\Omega}f({\bf x}^i))_{\Psi\setminus\Phi}\|_2\leq\|({\bf x}^i-{\bf x}-\eta\nabla_{\Omega}f({\bf x}^i)+\eta\nabla_{\Omega}f({\bf x}))_{\Psi\setminus\Phi}\|_2+\eta\|\nabla_{\Omega\cup\Psi}f({\bf x})\|_2
+\]
+where the inequality falls from the fact that $\Phi=\mathrm{supp}({\bf x})$. From the left-hand side, we have
+\[
+\|({\bf x}^i-\eta\nabla_{\Omega}f({\bf x}^i))_{\Phi\setminus\Psi}\|_2\leq{\color{red}{-\eta}}\|\nabla_{\Omega\cup\Phi}f({\bf x})\|_2+\|({\bf x}^i-{\bf x}-\eta\nabla_{\Omega}f({\bf x}^i)+\eta\nabla_{\Omega}f({\bf x}))_{\Phi\setminus\Psi}+({\bf x}-{\bf b})_{\Psi^c}\|_2
+\]
+where the inequality follows from the fact that ${\bf b}_{\Psi^c}={\bf 0},{\bf x}_{\Phi\setminus\Psi}={\bf x}_{\Psi^c}$, and $-{\bf x}_{\Phi\setminus\Psi}+({\bf x}-{\bf b})_{\Psi^c}={\bf 0}$. Let $\Phi\Delta\Psi$ be the symmetric difference of the set $\Phi$ and $\Psi$. It follows that
+\begin{align*}
+\|({\bf b}-{\bf x})_{\Psi^c}\|_2\leq&\sqrt{2}\|({\bf x}^i-{\bf x}-\eta\nabla_{\Omega}f({\bf x}^i)+\eta\nabla_{\Omega}f({\bf x}))_{\Phi\Delta\Psi}\|_2+2\eta\|\nabla_I f({\bf x})\|_2\\
+\leq&\sqrt{2}\|({\bf x}^i-{\bf x}-\eta\nabla_{\Omega} f({\bf x}^i)+\eta\nabla_{\Omega}f({\bf x}))_{\Phi\Delta\Psi}\|_2+2\eta\|\nabla_I f({\bf x})\|_2\\
+\leq&\sqrt{2}\|({\bf x}^i-{\bf x}-\xi\nabla_{\Omega} f({\bf x}^i)+\xi\nabla_{\Omega}f({\bf x}))_{\Phi\Delta\Psi}\|_2\\
+&+\sqrt{2}(\xi-\eta)\|(\nabla_{\Omega}-\nabla_{\Omega}f({\bf x}))_{\Phi\Delta\Psi}\|_2+2\eta\|\nabla_I f({\bf x})\|_2\\
+=&\sqrt{2}\|({\bf r}_{\Omega^c}^i+{\bf r}_{\Omega}^i-\xi\nabla_{\Omega}f({\bf x}^i)+\xi\nabla_{\Omega} f({\bf x}))_{\Phi\Delta\Psi}\|_2\\
+&+\sqrt{2}(\xi-\eta)\|(\nabla_{\Omega}f({\bf x}^i)-\nabla_{\Omega} f({\bf x}))_{\Phi\Delta\Psi}\|_2+2\eta\|\nabla_I f({\bf x})\|_2\\
+\leq&\sqrt{2}\|{\bf r}_{\Omega^c}^i\|_2+\sqrt{2}\|({\bf r}_{\Omega}^i-\xi\nabla_{\Omega}f({\bf x}^i)+\xi\nabla_{\Omega} f({\bf x}))_{\Phi\Delta\Psi}\|_2\\
+&+\sqrt{2}(\xi-\eta)\|(\nabla_{\Omega}f({\bf x}^i)-\nabla_{\Omega} f({\bf x}))_{\Phi\Delta\Psi}\|_2+2\eta\|\nabla_I f({\bf x})\|_2\\
+\leq&\sqrt{2}\|{\bf r}_{\Omega^c}^i\|_2+\sqrt{2}\|{\bf r}^i-\xi\nabla_{\Omega\cup\Psi\cup\Phi}f({\bf x}^i)+\xi\nabla_{\Omega\cup\Psi\cup\Phi}f({\bf x})\|_2\\
+&+\sqrt{2}(\xi-\eta)\|(\nabla_{\Omega\cup\Psi\cup\Phi} f({\bf x}^i)-\nabla_{\Omega\cup\Psi\cup\Phi}f({\bf x}))_{\Phi\Delta\Psi}\|_2+2\eta\|\nabla_I f({\bf x})\|_2\\
+\leq&\sqrt{2}\|{\bf r}_{\Omega^c}^i\|_2+\sqrt{2}\left(\left(2-\frac{\eta}{\xi} \right)\delta+1-\frac{\eta}{\xi} \right)\|{\bf r}^i\|_2+2(\sqrt{2}\xi+(1-\sqrt{2})\eta)\|\nabla_I f({\bf x})\|_2
+\end{align*}
+where the first inequality follows from the fact that
+\textcolor{red}{
+\[
+\eta\|\nabla_{\Omega\cup\Phi}f({\bf x})\|_2+\eta\|\nabla_{\Psi\cup\Phi\cup\Omega}f({\bf x})\|_2\leq2\eta\|\nabla_I f({\bf x})\|_2
+\]
+}
+the third inequality follows as ${\bf x}^i-{\bf x}={\bf r}^i={\bf r}_{\Omega^c}^i+{\bf r}_{\Omega}^i$, the fourth inequality follows from the fact that $\|({\bf r}_{\Omega^c}^i)_{\Phi\Delta\Psi}\|_2\leq\|{\bf r}_{\Omega^c}^i\|_2$, the sixth inequality follows as ${\bf r}^i\subseteq\Omega\cup\Psi\cup\Phi$, and the last inequality follows from condition $(\xi,\delta,\mathbb{M}(\mathbb{G}, 8k))$-WRSC and Lemma \ref{lem:wrsc}. From Lemma \ref{lem:omegac}, we have
+\[
+\|{\bf r}_{\Omega^c}^i\|_2\leq\sqrt{1-\alpha_0^2}\|{\bf r}\|_2+\left[\frac{\beta_0}{\alpha_0}+\frac{\alpha_0\beta_0}{\sqrt{1-\alpha_0^2}} \right]\|\nabla_I f({\bf x})\|_2
+\]
+Combining (\ref{eq:romegac}) and above inequalities, we prove the theorem.
+\end{proof}
+
+\paragraph{Proof of Theorem \ref{thm:ghtp:iht:time}}
+
+\subsection{Proof of SG-Pursuit}
+
+\subsection{Proof of GBMP}
+
+\subsection{Proof of GBIHT}
+
+\paragraph{Proof of Theorem \ref{thm:blockiht:converge}}
+\begin{proof}
+From the triangle inequality, we have
+\begin{align*}
+\|{\bf r}^{i+1}\|_2=&\|{\bf x}^{i+1}-{\bf x}\|_2\\
+&\text{\color{red}{${\bf x}$ is the optimum of our problem}}\\
+\leq&\|{\bf x}^{i+1}-{\bf b}\|_2+\|{\bf x}-{\bf b}\|_2\\
+\leq&c_T\cdot\|{\bf x}^*-{\bf b}\|_2+\|{\bf x}-{\bf b}\|_2\\
+&\text{\color{red}{${\bf x}^*$ is the optimum of $\min_{{\bf x}'}\|{\bf x}'-{\bf b}\|_2$}}\\ 
+\leq&c_T\|{\bf x}-{\bf b}\|_2+\|{\bf x}-{\bf b}\|_2\\
+&{\color{red}{\|{\bf x}^*-{\bf b}\|_2\leq\|{\bf x}-{\bf b}\|_2}}, {\bf x}^*, {\bf x}\in\mathbb{M}(\mathbb{G}, ???)\\
+=&(1+c_T)\|{\bf x}-{\bf b}\|_2
+\end{align*}
+\end{proof}
+
+\subsection{Proof of GBGHTP}
+
+\bibliographystyle{acm}
+\bibliography{../references}
+
+\end{document}

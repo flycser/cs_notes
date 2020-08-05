@@ -1,0 +1,34 @@
+\BOOKMARK [1][-]{section.1}{Introduction}{}% 1
+\BOOKMARK [1][-]{section.2}{Preliminary}{}% 2
+\BOOKMARK [2][-]{subsection.2.1}{Approximation algorithms for the projection oracle P\(x\)}{section.2}% 3
+\BOOKMARK [1][-]{section.3}{Graph-Mp}{}% 4
+\BOOKMARK [2][-]{subsection.3.1}{Problem Statement}{section.3}% 5
+\BOOKMARK [2][-]{subsection.3.2}{Algorithm}{section.3}% 6
+\BOOKMARK [2][-]{subsection.3.3}{Theoretical Analysis}{section.3}% 7
+\BOOKMARK [1][-]{section.4}{Graph-IHT and Graph-GHTP}{}% 8
+\BOOKMARK [2][-]{subsection.4.1}{Problem Statement}{section.4}% 9
+\BOOKMARK [2][-]{subsection.4.2}{Algorithm}{section.4}% 10
+\BOOKMARK [2][-]{subsection.4.3}{Theoretical Analysis of Graph-IHT}{section.4}% 11
+\BOOKMARK [2][-]{subsection.4.4}{Theoretical Analysis of Graph-GHTP}{section.4}% 12
+\BOOKMARK [1][-]{section.5}{SG-Pursuit}{}% 13
+\BOOKMARK [2][-]{subsection.5.1}{Problem Statement}{section.5}% 14
+\BOOKMARK [2][-]{subsection.5.2}{Algorithm}{section.5}% 15
+\BOOKMARK [2][-]{subsection.5.3}{Theoretical Analysis}{section.5}% 16
+\BOOKMARK [1][-]{section.6}{Graph Block-Structured Matching Pursuit}{}% 17
+\BOOKMARK [2][-]{subsection.6.1}{Problem Statement}{section.6}% 18
+\BOOKMARK [2][-]{subsection.6.2}{Algorithm}{section.6}% 19
+\BOOKMARK [2][-]{subsection.6.3}{Theoretical Analysis}{section.6}% 20
+\BOOKMARK [1][-]{section.7}{Graph Block-Structured Iterative Hard Thresholding}{}% 21
+\BOOKMARK [2][-]{subsection.7.1}{Algorithm}{section.7}% 22
+\BOOKMARK [2][-]{subsection.7.2}{Theoretical Analysis}{section.7}% 23
+\BOOKMARK [1][-]{section.8}{Graph Block-Structured Gradient Hard Thresholding Pursuit}{}% 24
+\BOOKMARK [2][-]{subsection.8.1}{Algorithm}{section.8}% 25
+\BOOKMARK [2][-]{subsection.8.2}{Theoretical Analysis}{section.8}% 26
+\BOOKMARK [1][-]{appendix.A}{Proof}{}% 27
+\BOOKMARK [2][-]{subsection.A.1}{Proof of Graph-Mp}{appendix.A}% 28
+\BOOKMARK [2][-]{subsection.A.2}{Proof of Graph-IHT}{appendix.A}% 29
+\BOOKMARK [2][-]{subsection.A.3}{Proof of Graph-GHTP}{appendix.A}% 30
+\BOOKMARK [2][-]{subsection.A.4}{Proof of SG-Pursuit}{appendix.A}% 31
+\BOOKMARK [2][-]{subsection.A.5}{Proof of GBMP}{appendix.A}% 32
+\BOOKMARK [2][-]{subsection.A.6}{Proof of GBIHT}{appendix.A}% 33
+\BOOKMARK [2][-]{subsection.A.7}{Proof of GBGHTP}{appendix.A}% 34

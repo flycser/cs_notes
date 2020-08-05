@@ -1,0 +1,160 @@
+\begin{thebibliography}{10}
+
+\bibitem{antoniou2017data}
+{\sc Antoniou, A., Storkey, A., and Edwards, H.}
+\newblock Data augmentation generative adversarial networks.
+\newblock {\em arXiv preprint arXiv:1711.04340\/} (2017).
+
+\bibitem{ba2016layer}
+{\sc Ba, J.~L., Kiros, J.~R., and Hinton, G.~E.}
+\newblock Layer normalization.
+\newblock {\em arXiv preprint arXiv:1607.06450\/} (2016).
+
+\bibitem{banerjee2005clustering}
+{\sc Banerjee, A., Merugu, S., Dhillon, I.~S., and Ghosh, J.}
+\newblock Clustering with bregman divergences.
+\newblock {\em Journal of machine learning research 6}, Oct (2005), 1705--1749.
+
+\bibitem{fei2006one}
+{\sc Fei-Fei, L., Fergus, R., and Perona, P.}
+\newblock One-shot learning of object categories.
+\newblock {\em IEEE transactions on pattern analysis and machine intelligence
+  28}, 4 (2006), 594--611.
+
+\bibitem{finn2017model}
+{\sc Finn, C., Abbeel, P., and Levine, S.}
+\newblock Model-agnostic meta-learning for fast adaptation of deep networks.
+\newblock In {\em Proceedings of the 34th International Conference on Machine
+  Learning-Volume 70\/} (2017), JMLR. org, pp.~1126--1135.
+
+\bibitem{garcia2017few}
+{\sc Garcia, V., and Bruna, J.}
+\newblock Few-shot learning with graph neural networks.
+\newblock {\em arXiv preprint arXiv:1711.04043\/} (2017).
+
+\bibitem{goodfellow2014generative}
+{\sc Goodfellow, I., Pouget-Abadie, J., Mirza, M., Xu, B., Warde-Farley, D.,
+  Ozair, S., Courville, A., and Bengio, Y.}
+\newblock Generative adversarial nets.
+\newblock In {\em Advances in neural information processing systems\/} (2014),
+  pp.~2672--2680.
+
+\bibitem{gurumurthy2017deligan}
+{\sc Gurumurthy, S., Kiran~Sarvadevabhatla, R., and Venkatesh~Babu, R.}
+\newblock Deligan: Generative adversarial networks for diverse and limited
+  data.
+\newblock In {\em Proceedings of the IEEE Conference on Computer Vision and
+  Pattern Recognition\/} (2017), pp.~166--174.
+
+\bibitem{gygli2017deep}
+{\sc Gygli, M., Norouzi, M., and Angelova, A.}
+\newblock Deep value networks learn to evaluate and iteratively refine
+  structured outputs.
+\newblock In {\em Proceedings of the 34th International Conference on Machine
+  Learning-Volume 70\/} (2017), JMLR. org, pp.~1341--1351.
+
+\bibitem{hinton2012improving}
+{\sc Hinton, G.~E., Srivastava, N., Krizhevsky, A., Sutskever, I., and
+  Salakhutdinov, R.~R.}
+\newblock Improving neural networks by preventing co-adaptation of feature
+  detectors.
+\newblock {\em arXiv preprint arXiv:1207.0580\/} (2012).
+
+\bibitem{hochreiter1997long}
+{\sc Hochreiter, S., and Schmidhuber, J.}
+\newblock Long short-term memory.
+\newblock {\em Neural computation 9}, 8 (1997), 1735--1780.
+
+\bibitem{ioffe2015batch}
+{\sc Ioffe, S., and Szegedy, C.}
+\newblock Batch normalization: Accelerating deep network training by reducing
+  internal covariate shift.
+\newblock {\em arXiv preprint arXiv:1502.03167\/} (2015).
+
+\bibitem{koch2015siamese}
+{\sc Koch, G., Zemel, R., and Salakhutdinov, R.}
+\newblock Siamese neural networks for one-shot image recognition.
+\newblock In {\em ICML Deep Learning Workshop\/} (2015), vol.~2.
+
+\bibitem{krizhevsky2012imagenet}
+{\sc Krizhevsky, A., Sutskever, I., and Hinton, G.~E.}
+\newblock Imagenet classification with deep convolutional neural networks.
+\newblock In {\em Advances in neural information processing systems\/} (2012),
+  pp.~1097--1105.
+
+\bibitem{mehrotra2017generative}
+{\sc Mehrotra, A., and Dukkipati, A.}
+\newblock Generative adversarial residual pairwise networks for one shot
+  learning.
+\newblock {\em arXiv preprint arXiv:1703.08033\/} (2017).
+
+\bibitem{mishra2017meta}
+{\sc Mishra, N., Rohaninejad, M., Chen, X., and Abbeel, P.}
+\newblock Meta-learning with temporal convolutions.
+\newblock {\em arXiv preprint arXiv:1707.03141 2}, 7 (2017).
+
+\bibitem{munkhdalai2017meta}
+{\sc Munkhdalai, T., and Yu, H.}
+\newblock Meta networks.
+\newblock In {\em Proceedings of the 34th International Conference on Machine
+  Learning-Volume 70\/} (2017), JMLR. org, pp.~2554--2563.
+
+\bibitem{perez2017effectiveness}
+{\sc Perez, L., and Wang, J.}
+\newblock The effectiveness of data augmentation in image classification using
+  deep learning.
+\newblock {\em arXiv preprint arXiv:1712.04621\/} (2017).
+
+\bibitem{ravi2016optimization}
+{\sc Ravi, S., and Larochelle, H.}
+\newblock Optimization as a model for few-shot learning.
+
+\bibitem{santoro2016meta}
+{\sc Santoro, A., Bartunov, S., Botvinick, M., Wierstra, D., and Lillicrap, T.}
+\newblock Meta-learning with memory-augmented neural networks.
+\newblock In {\em International conference on machine learning\/} (2016),
+  pp.~1842--1850.
+
+\bibitem{snell2017prototypical}
+{\sc Snell, J., Swersky, K., and Zemel, R.}
+\newblock Prototypical networks for few-shot learning.
+\newblock In {\em Advances in Neural Information Processing Systems\/} (2017),
+  pp.~4077--4087.
+
+\bibitem{sun2018meta}
+{\sc Sun, Q., Liu, Y., Chua, T.-S., and Schiele, B.}
+\newblock Meta-transfer learning for few-shot learning.
+\newblock {\em arXiv preprint arXiv:1812.02391\/} (2018).
+
+\bibitem{sung2018learning}
+{\sc Sung, F., Yang, Y., Zhang, L., Xiang, T., Torr, P.~H., and Hospedales,
+  T.~M.}
+\newblock Learning to compare: Relation network for few-shot learning.
+\newblock In {\em Proceedings of the IEEE Conference on Computer Vision and
+  Pattern Recognition\/} (2018), pp.~1199--1208.
+
+\bibitem{thrun2012learning}
+{\sc Thrun, S., and Pratt, L.}
+\newblock {\em Learning to learn}.
+\newblock Springer Science \& Business Media, 2012.
+
+\bibitem{vinyals2016matching}
+{\sc Vinyals, O., Blundell, C., Lillicrap, T., Wierstra, D., et~al.}
+\newblock Matching networks for one shot learning.
+\newblock In {\em Advances in neural information processing systems\/} (2016),
+  pp.~3630--3638.
+
+\bibitem{wang2019survey}
+{\sc Wang, W., Zheng, V.~W., Yu, H., and Miao, C.}
+\newblock A survey of zero-shot learning: Settings, methods, and applications.
+\newblock {\em ACM Trans. Intell. Syst. Technol. 10}, 2 (Jan. 2019),
+  13:1--13:37.
+
+\bibitem{zhu2017unpaired}
+{\sc Zhu, J.-Y., Park, T., Isola, P., and Efros, A.~A.}
+\newblock Unpaired image-to-image translation using cycle-consistent
+  adversarial networks.
+\newblock In {\em Proceedings of the IEEE International Conference on Computer
+  Vision\/} (2017), pp.~2223--2232.
+
+\end{thebibliography}
